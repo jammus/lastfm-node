@@ -1,7 +1,5 @@
 var RecentTracksParser = require('../lib/lastfm-node/recenttracks-parser').RecentTracksParser;
 var assert = require('assert');
-var sys = require('sys');
-
 var ntest = require('ntest');
 
 ntest.describe("parser")
