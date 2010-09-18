@@ -19,7 +19,7 @@ ntest.describe("parser")
     assert.equal(null, this.parser.parse('{\"recentevents\":{\"event\":{}}}'));
   })
 
-  ntest.it("returns most first track when array", function() {
+  ntest.it("returns first track when array", function() {
     assert.equal('first', this.parser.parse('{\"recenttracks\":{\"track\":[\"first\", \"second\"]}}'));
   })
 
