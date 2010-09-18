@@ -2,6 +2,11 @@ var RecentTracksParser = require('../lib/lastfm-node/recenttracks-parser').Recen
 var assert = require('assert');
 var ntest = require('ntest');
 
+var TestData = Object.create;
+TestData.SingleRecentTrack = '{\"recenttracks\":{\"track\":42}}';
+TestData.UnknownObject = '{\"recentevents\":{\"event\":{}}}';
+TestData.MultipleRecentsTracks = '{\"recenttracks\":{\"track\":[\"first\", \"second\"]}}';
+TestData.Garbage = 'fi30i\ 32';
 ntest.describe("parser")
   ntest.before(function() { this.parser = new RecentTracksParser(); })
 
@@ -10,40 +15,66 @@ ntest.describe("parser")
     })
 
   ntest.it("returns object for value of recenttracks.track", function() {
-    assert.equal(42, this.parser.parse('{\"recenttracks\":{\"track\":42}}'));
+    assert.equal(42, this.parser.parse(TestData.SingleRecentTrack));
    })
 
   ntest.it("returns null for unexpected input", function() {
-    assert.equal(null, this.parser.parse('{\"recentevents\":{\"event\":{}}}'));
+    assert.equal(null, this.parser.parse(TestData.UnknownObject));
   })
 
   ntest.it("returns first track when array", function() {
-    assert.equal('first', this.parser.parse('{\"recenttracks\":{\"track\":[\"first\", \"second\"]}}'));
+    assert.equal('first', this.parser.parse(TestData.MultipleRecentsTracks));
   })
 
   ntest.it("returns null for non-json input", function() {
-    assert.equal(null, this.parser.parse('fi30i\ 32'));
+    assert.equal(null, this.parser.parse(TestData.Garbage));
   })
 
 ntest.describe("receiver")
   ntest.before(function() { this.parser = new RecentTracksParser(); })
   
-  ntest.it("won't parse without terminator", function() {
-    assert.equal(null, this.parser.receive('{\"recenttracks\":{\"track\":42}}'));
-    })
+  ntest.it("accepts listeners", function() {
+    this.parser.addListener('someevent', function() {
+    });
+  })
+  
+  ntest.it("emits track event on valid track", function() {
+    var emitted = false;
+    this.parser.addListener('track', function(track) {
+      emitted = true; 
+    });
+    this.parser.receive(TestData.SingleRecentTrack + '\n');
+    assert.ok(emitted);
+  }) 
 
-  ntest.it("accepts input in chunks", function() {
-    this.parser.receive('{\"recenttracks\":{\"trac');
-    var track = this.parser.receive('k\":42}}\n');
-    assert.equal(42, track);
+  ntest.it("won't emit track without terminator", function() {
+    var emitted = false;
+    this.parser.addListener('track', function(track) {
+      emitted = true; 
+    });
+    this.parser.receive(TestData.SingleRecentTrack);
+    assert.ok(!emitted);
   })
 
-  ntest.it("can receive multiple tracks", function() {
-    this.parser.receive('{\"recenttracks\":{\"trac');
-    var track = this.parser.receive('k\":42}}\n');
-    assert.equal(42, track);
-    
-    this.parser.receive('{\"recenttracks\":{\"trac');
-    var track = this.parser.receive('k\":86}}\n');
-    assert.equal(86, track);
-  }) 
+  ntest.it("accepts input in chunks", function() {
+    var emitted = false;
+    this.parser.addListener('track', function(track) {
+      emitted = true; 
+    });
+
+    var first_chunk = TestData.SingleRecentTrack.substr(5, 8);
+    var second_chunk = TestData.SingleRecentTrack.substr(13);
+    this.parser.receive(first_chunk);
+    this.parser.receive(second_chunk + '\n');
+    assert.ok(emitted);
+  })
+
+  ntest.it("can emit receive multiple tracks", function() {
+    var trackCount = 0;
+    this.parser.addListener('track', function(track) {
+      trackCount++; 
+    });
+    this.parser.receive(TestData.SingleRecentTrack + '\n');
+    this.parser.receive(TestData.SingleRecentTrack + '\n');
+    assert.equal(2, trackCount);
+  })
