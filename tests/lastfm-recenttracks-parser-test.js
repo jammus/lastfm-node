@@ -62,14 +62,14 @@ ntest.describe("receiver")
       emitted = true; 
     });
 
-    var first_chunk = TestData.SingleRecentTrack.substr(5, 8);
-    var second_chunk = TestData.SingleRecentTrack.substr(13);
+    var first_chunk = TestData.SingleRecentTrack.substr(0, 8);
+    var second_chunk = TestData.SingleRecentTrack.substr(8);
     this.parser.receive(first_chunk);
     this.parser.receive(second_chunk + '\n');
     assert.ok(emitted);
   })
 
-  ntest.it("can emit receive multiple tracks", function() {
+  ntest.it("can emit multiple tracks", function() {
     var trackCount = 0;
     this.parser.addListener('track', function(track) {
       trackCount++; 
@@ -78,3 +78,13 @@ ntest.describe("receiver")
     this.parser.receive(TestData.SingleRecentTrack + '\n');
     assert.equal(2, trackCount);
   })
+
+  ntest.it("emits error on receipt of garbage", function() {
+    var errored = false;
+    this.parser.addListener('error', function() {
+      errored = true; 
+    });
+    this.parser.receive(TestData.Garbage + '\n');
+    assert.ok(errored);
+  })
+
