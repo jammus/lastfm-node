@@ -22,3 +22,13 @@ ntest.describe("recentracks")
   ntest.it("returns most first track when array", function() {
     assert.equal('first', this.parser.parse('{\"recenttracks\":{\"track\":[\"first\", \"second\"]}}'));
   })
+
+  ntest.it("returns null for non-json input", function() {
+    assert.equal(null, this.parser.parse('fi30i\ 32'));
+  })
+
+  ntest.it("accepts input in chunks", function() {
+    this.parser.parse('{\"recenttracks\":{\"trac');
+    var track = this.parser.parse('k\":42}}');
+    assert.equal(42, track);
+  })

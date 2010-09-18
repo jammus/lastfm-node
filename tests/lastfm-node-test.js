@@ -1,5 +1,6 @@
 var LastFmNode = require('../lib/lastfm-node').LastFmNode;
 var assert = require('assert');
+var sys = require('sys');
 
 var ntest = require('ntest');
 
@@ -16,6 +17,18 @@ ntest.describe("default LastFmNode instance")
 
   ntest.it("requests recent tracks", function() {
     assert.ok(this.lastfm.buildParams().indexOf('method=user.getrecenttracks') > -1);
+  })
+
+  ntest.it("has default host", function() {
+    assert.equal('ws.audoscrobbler.com', this.lastfm.host);
+  })
+
+  ntest.it("only requests the most recent track", function() {
+    assert.ok(this.lastfm.buildParams().indexOf('limit=1') > -1);
+  })
+
+  ntest.it("checks every ten seconds", function() {
+    assert.equal(10, this.lastfm.rate);
   })
 
 ntest.describe("LastFmNode instance")
