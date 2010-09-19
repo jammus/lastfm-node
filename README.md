@@ -1,17 +1,14 @@
-lastfm-node
-===========
+# lastfm-node
 
 Periodically monitors a user's recent plays feed on Last.fm.
 
-Events
-======
+## Events
 
 * lastPlayed(track) - The user's last scrobbled track.
 * nowPlaying(track) - Track the user is currently listening to.
 * error(error) - Ruh-roh.
 
-Usage
-=====
+## Usage
 
 var LastFmNode = require('lastfm-node').LastFmNode;
 
@@ -30,8 +27,7 @@ lastfm.addListener('nowPlaying', function(track) {
 
 lastfm.stream();
 
-Influences
-==========
+## Influences
 
 Heavily drawn from (almost ripped off, in fact) technoweenie's twitter-node
 http://github.com/technoweenie/twitter-node
