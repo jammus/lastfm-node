@@ -10,24 +10,16 @@ TestData.Garbage = 'fi30i\ 32';
 ntest.describe("parser")
   ntest.before(function() { this.parser = new RecentTracksParser(); })
 
-  ntest.it("returns null when empty", function() {
-    assert.equal(null, this.parser.parse(''));
+  ntest.it("throws exception when empty", function() {
+    assert.throws(function() { this.parser.parse('') });
     })
 
   ntest.it("returns object for value of recenttracks.track", function() {
     assert.equal(42, this.parser.parse(TestData.SingleRecentTrack));
    })
 
-  ntest.it("returns null for unexpected input", function() {
-    assert.equal(null, this.parser.parse(TestData.UnknownObject));
-  })
-
   ntest.it("returns first track when array", function() {
     assert.equal('first', this.parser.parse(TestData.MultipleRecentsTracks));
-  })
-
-  ntest.it("returns null for non-json input", function() {
-    assert.equal(null, this.parser.parse(TestData.Garbage));
   })
 
 ntest.describe("receiver")
