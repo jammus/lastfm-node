@@ -56,27 +56,32 @@ ntest.describe("LastFmNode instance")
     assert.ok(this.lastfm.buildParams().indexOf('user=username') > -1);
   })
 
-ntest.describe("fresh LastFmNode instance")
+ntest.describe("LastFm instance with existing last play")
   ntest.setup(function() { 
     var context = this;
 
     this.parser = new RecentTracksParser();
     this.lastfm = new LastFmNode({parser: this.parser});
-   
+
     context.errored = null;
     this.lastfm.addListener('error', function(error) {
       context.errored = error;
     });
-
+   
     context.lastPlay = null;
+    context.lastPlayCount = 0;
     this.lastfm.addListener('lastPlayed', function(track) {
       context.lastPlay = track;
+      context.lastPlayCount++;
     });
 
     context.nowPlaying = null;
+    context.nowPlayingCount = 0;
     this.lastfm.addListener('nowPlaying', function(track) {
       context.nowPlaying = track;
+      context.nowPlayingCount++;
     });
+
   });
 
   ntest.it("bubbles errors", function() {
@@ -96,4 +101,16 @@ ntest.describe("fresh LastFmNode instance")
     assert.ok(!this.lastPlay);
     assert.ok(this.nowPlaying);
     assert.equal('Run To Your Grave', this.nowPlaying.name); 
+  });
+
+  ntest.it("does not re-emit lastPlayed on receipt of same track", function() {
+    this.parser.emit('track', FakeTracks.LambAndTheLion);
+    this.parser.emit('track', FakeTracks.LambAndTheLion);
+    assert.equal(1, this.lastPlayCount);
+  });
+
+  ntest.it("does not re-emit nowPlaying on receipt of same track", function() {
+    this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
+    this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
+    assert.equal(1, this.nowPlayingCount);
   });
