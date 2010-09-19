@@ -1,12 +1,8 @@
 var RecentTracksParser = require('../lib/lastfm-node/recenttracks-parser').RecentTracksParser;
 var assert = require('assert');
 var ntest = require('ntest');
+var FakeData = require('./TestData.js').FakeData;
 
-var TestData = Object.create;
-TestData.SingleRecentTrack = '{\"recenttracks\":{\"track\":42}}';
-TestData.UnknownObject = '{\"recentevents\":{\"event\":{}}}';
-TestData.MultipleRecentsTracks = '{\"recenttracks\":{\"track\":[\"first\", \"second\"]}}';
-TestData.Garbage = 'fi30i\ 32';
 ntest.describe("parser")
   ntest.before(function() { this.parser = new RecentTracksParser(); })
 
@@ -14,12 +10,16 @@ ntest.describe("parser")
     assert.throws(function() { this.parser.parse('') });
     })
 
+  ntest.it("thows exception when no recenttracks object", function() {
+    assert.throws(function() { this.parser.parser(FakeData.UnknownObject); });
+    })
+
   ntest.it("returns object for value of recenttracks.track", function() {
-    assert.equal(42, this.parser.parse(TestData.SingleRecentTrack));
+    assert.equal(42, this.parser.parse(FakeData.SingleRecentTrack));
    })
 
   ntest.it("returns first track when array", function() {
-    assert.equal('first', this.parser.parse(TestData.MultipleRecentsTracks));
+    assert.equal('first', this.parser.parse(FakeData.MultipleRecentsTracks));
   })
 
 ntest.describe("receiver")
@@ -35,7 +35,7 @@ ntest.describe("receiver")
     this.parser.addListener('track', function(track) {
       emitted = true; 
     });
-    this.parser.receive(TestData.SingleRecentTrack + '\n');
+    this.parser.receive(FakeData.SingleRecentTrack + '\n');
     assert.ok(emitted);
   }) 
 
@@ -44,7 +44,7 @@ ntest.describe("receiver")
     this.parser.addListener('track', function(track) {
       emitted = true; 
     });
-    this.parser.receive(TestData.SingleRecentTrack);
+    this.parser.receive(FakeData.SingleRecentTrack);
     assert.ok(!emitted);
   })
 
@@ -54,8 +54,8 @@ ntest.describe("receiver")
       emitted = true; 
     });
 
-    var first_chunk = TestData.SingleRecentTrack.substr(0, 8);
-    var second_chunk = TestData.SingleRecentTrack.substr(8);
+    var first_chunk = FakeData.SingleRecentTrack.substr(0, 8);
+    var second_chunk = FakeData.SingleRecentTrack.substr(8);
     this.parser.receive(first_chunk);
     this.parser.receive(second_chunk + '\n');
     assert.ok(emitted);
@@ -66,8 +66,8 @@ ntest.describe("receiver")
     this.parser.addListener('track', function(track) {
       trackCount++; 
     });
-    this.parser.receive(TestData.SingleRecentTrack + '\n');
-    this.parser.receive(TestData.SingleRecentTrack + '\n');
+    this.parser.receive(FakeData.SingleRecentTrack + '\n');
+    this.parser.receive(FakeData.SingleRecentTrack + '\n');
     assert.equal(2, trackCount);
   })
 
@@ -76,7 +76,7 @@ ntest.describe("receiver")
     this.parser.addListener('error', function() {
       errored = true; 
     });
-    this.parser.receive(TestData.Garbage + '\n');
+    this.parser.receive(FakeData.Garbage + '\n');
     assert.ok(errored);
   })
 
