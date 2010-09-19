@@ -1,4 +1,4 @@
-var LastFmNode = require('../lib/lastfm-node').LastFmNode;
+var LastFmNode = require('lastfm').LastFmNode;
 var RecentTracksParser = require('../lib/lastfm-node/recenttracks-parser').RecentTracksParser;
 var FakeTracks = require('./TestData.js').FakeTracks;
 

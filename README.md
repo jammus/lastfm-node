@@ -2,6 +2,13 @@
 
 Periodically monitors a user's recent plays feed on Last.fm.
 
+## Installation
+
+Using NPM
+
+    npm install lastfm
+
+
 ## Events
 
 * lastPlayed(track) - The user's last scrobbled track.
@@ -10,7 +17,7 @@ Periodically monitors a user's recent plays feed on Last.fm.
 
 ## Usage
 
-    var LastFmNode = require('lastfm-node').LastFmNode;
+    var LastFmNode = require('lastfm').LastFmNode;
     
     var lastfm = new LastFmNode({
       api_key: 'abc',
@@ -29,5 +36,5 @@ Periodically monitors a user's recent plays feed on Last.fm.
 
 ## Influences
 
-Heavily drawn from (almost ripped off, in fact) technoweenie's twitter-node
+Heavily drawn from (almost ripped off, in fact) technoweenie's twitter-node  
 http://github.com/technoweenie/twitter-node
