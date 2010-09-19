@@ -10,22 +10,22 @@ Periodically monitors a user's recent plays feed on Last.fm.
 
 ## Usage
 
-var LastFmNode = require('lastfm-node').LastFmNode;
+    var LastFmNode = require('lastfm-node').LastFmNode;
+    
+    var lastfm = new LastFmNode({
+      api_key: 'abc',
+      user: 'username'
+    });
+    
+    lastfm.addListener('lastPlayed', function(track) {
+      console.log('Last played: ' + track.name);
+    });
+    
+    lastfm.addListener('nowPlaying', function(track) {
+      console.log('Now playing: ' + track.name);
+    });
 
-var lastfm = new LastFmNode({
-  api_key: 'abc',
-  user: 'username'
-});
-
-lastfm.addListener('lastPlayed', function(track) {
-  console.log('Last played: ' + track.name);
-});
-
-lastfm.addListener('nowPlaying', function(track) {
-  console.log('Now playing: ' + track.name);
-});
-
-lastfm.stream();
+    lastfm.stream();
 
 ## Influences
 
