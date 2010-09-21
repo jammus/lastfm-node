@@ -10,7 +10,7 @@ var ntest = require('ntest');
 ntest.describe("default LastFmNode instance")
   ntest.before(function() { this.lastfm = new LastFmNode(); })
 
-  ntest.it("requests from default url", function() {
+  ntest.it("has default url", function() {
     assert.ok(this.lastfm.requestUrl() != '');
   })
 
@@ -82,6 +82,12 @@ ntest.describe("LastFm instance with existing last play")
       context.nowPlayingCount++;
     });
 
+    context.stoppedPlaying = null;
+    context.stoppedPlayingCount = 0;
+    this.lastfm.addListener('stoppedPlaying', function(track) {
+      context.stoppedPlaying = track;
+      context.stoppedPlayingCount++;
+    });
   });
 
   ntest.it("bubbles errors", function() {
@@ -112,5 +118,20 @@ ntest.describe("LastFm instance with existing last play")
   ntest.it("does not re-emit nowPlaying on receipt of same track", function() {
     this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
     this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
+    assert.equal(1, this.nowPlayingCount);
+  });
+
+  ntest.it("emits stoppedPlaying with last scrobbled track when now playing stops", function() {
+    this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
+    this.parser.emit('track', FakeTracks.LambAndTheLion);
+    assert.equal(0, this.lastPlayCount);
+    assert.equal(1, this.stoppedPlayingCount);
+    assert.equal('Lamb and the Lion', this.stoppedPlaying.name);
+  });
+
+  ntest.it("emits nowPlaying when track same as lastPlayed", function() {
+    this.parser.emit('track', FakeTracks.RunToYourGrave);
+    this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
+    assert.equal(1, this.lastPlayCount);
     assert.equal(1, this.nowPlayingCount);
   });

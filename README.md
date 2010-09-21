@@ -13,6 +13,7 @@ Using NPM
 
 * lastPlayed(track) - The user's last scrobbled track.
 * nowPlaying(track) - Track the user is currently listening to.
+* stoppedPlaying(track) - Last track scrobbled before the user stopped listening
 * error(error) - Ruh-roh.
 
 ## Usage
@@ -30,6 +31,10 @@ Using NPM
     
     lastfm.addListener('nowPlaying', function(track) {
       console.log('Now playing: ' + track.name);
+    });
+
+    lastfm.addListener('error', function(error) {
+      console.log('Error: '  + error);
     });
 
     lastfm.stream();
