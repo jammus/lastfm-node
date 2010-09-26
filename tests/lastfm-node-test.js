@@ -4,7 +4,6 @@ var FakeTracks = require('./TestData.js').FakeTracks;
 
 var assert = require('assert');
 var sys = require('sys');
-
 var ntest = require('ntest');
 
 ntest.describe("default LastFmNode instance")
@@ -88,6 +87,13 @@ ntest.describe("LastFm instance with existing last play")
       context.stoppedPlaying = track;
       context.stoppedPlayingCount++;
     });
+
+    context.scrobbled = null;
+    context.scrobbledCount = 0;
+    this.lastfm.addListener('scrobbled', function(track) {
+      context.scrobbled = track;
+      context.scrobbledCount++;
+    });
   });
 
   ntest.it("bubbles errors", function() {
@@ -109,6 +115,14 @@ ntest.describe("LastFm instance with existing last play")
     assert.equal('Run To Your Grave', this.nowPlaying.name); 
   });
 
+  ntest.it("emits now playing and last played if both received", function() {
+    this.parser.emit('track', FakeTracks.NowPlayingAndScrobbled);
+    assert.ok(this.lastPlay);
+    assert.equal('Over The Moon', this.lastPlay.name);
+    assert.ok(this.nowPlaying);
+    assert.equal('Theme Song', this.nowPlaying.name);
+  });
+
   ntest.it("does not re-emit lastPlayed on receipt of same track", function() {
     this.parser.emit('track', FakeTracks.LambAndTheLion);
     this.parser.emit('track', FakeTracks.LambAndTheLion);
@@ -123,12 +137,19 @@ ntest.describe("LastFm instance with existing last play")
 
   ntest.it("emits stoppedPlaying with last scrobbled track when now playing stops", function() {
     this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
-    this.parser.emit('track', FakeTracks.LambAndTheLion);
-    assert.equal(0, this.lastPlayCount);
+    this.parser.emit('track', FakeTracks.RunToYourGrave);
     assert.equal(1, this.stoppedPlayingCount);
-    assert.equal('Lamb and the Lion', this.stoppedPlaying.name);
+    assert.equal('Run To Your Grave', this.stoppedPlaying.name);
   });
 
+  ntest.it("emits scrobbled when last play changes", function() {
+    this.parser.emit('track', FakeTracks.LambAndTheLion);
+    this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
+    this.parser.emit('track', FakeTracks.RunToYourGrave);
+    assert.equal(1, this.scrobbledCount);
+    assert.equal('Run To Your Grave', this.scrobbled.name);
+  });
+  
   ntest.it("emits nowPlaying when track same as lastPlayed", function() {
     this.parser.emit('track', FakeTracks.RunToYourGrave);
     this.parser.emit('track', FakeTracks.RunToYourGrave_NP);

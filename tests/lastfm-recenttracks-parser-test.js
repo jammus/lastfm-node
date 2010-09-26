@@ -18,8 +18,10 @@ ntest.describe("parser")
     assert.equal(42, this.parser.parse(FakeData.SingleRecentTrack));
    })
 
-  ntest.it("returns first track when array", function() {
-    assert.equal('first', this.parser.parse(FakeData.MultipleRecentsTracks));
+  ntest.it("returns multiple track when array", function() {
+    var tracks = this.parser.parse(FakeData.MultipleRecentsTracks);
+    assert.equal("first", tracks[0]);
+    assert.equal("second", tracks[1]);
   })
 
 ntest.describe("receiver")
