@@ -22,31 +22,32 @@ Using NPM
     var LastFmNode = require('lastfm').LastFmNode;
     
     var lastfm = new LastFmNode({
-      api_key: 'abc',
-      user: 'username'
+      api_key: 'abc'
     });
+
+    var trackStream = lastfm.getRecentTrackStream({user: 'username'});
     
-    lastfm.addListener('lastPlayed', function(track) {
+    trackStream.addListener('lastPlayed', function(track) {
       console.log('Last played: ' + track.name);
     });
     
-    lastfm.addListener('nowPlaying', function(track) {
+    trackStream.addListener('nowPlaying', function(track) {
       console.log('Now playing: ' + track.name);
     });
 
-    lastfm.addListener('scrobbled', function(track) {
+    trackStream.addListener('scrobbled', function(track) {
       console.log('Scrobbled: ' + track.name);
     });
 
-    lastfm.addListener('stoppedPlaying', function(track) {
+    trackStream.addListener('stoppedPlaying', function(track) {
       console.log('Stopped playing: ' + track.name);
     });
 
-    lastfm.addListener('error', function(error) {
+    trackStream.addListener('error', function(error) {
       console.log('Error: '  + error);
     });
 
-    lastfm.stream();
+    trackStream.stream();
 
 ## Influences
 
