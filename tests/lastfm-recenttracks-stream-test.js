@@ -12,28 +12,20 @@ ntest.describe("default stream instance");
     this.trackStream = new RecentTracksStream(this.lastfm, { user: 'username' });
   });
 
-  ntest.it("copies params from LastFmNode", function() {
-    assert.ok(this.trackStream.buildParams().indexOf(this.lastfm.buildParams()) > -1);
-  });
-
   ntest.it("requests recent tracks", function() {
-    assert.ok(this.trackStream.buildParams().indexOf('method=user.getrecenttracks') > -1);
+    assert.equal('user.getrecenttracks', this.trackStream.params.method);
   });
 
   ntest.it("configures user", function() {
-    assert.ok(this.trackStream.buildParams().indexOf('user=username') > -1);
+    assert.equal('username', this.trackStream.params.user);
   });
-
-  ntest.it("has default url", function() {
-    assert.ok(this.trackStream.requestUrl() != '');
-  })
 
   ntest.it("checks every ten seconds", function() {
     assert.equal(10, this.trackStream.rate);
   });
 
   ntest.it("only requests the most recent track", function() {
-    assert.ok(this.trackStream.buildParams().indexOf('limit=1') > -1);
+    assert.equal(1, this.trackStream.params.limit);
   });
 
   ntest.it("accepts listeners", function() {
