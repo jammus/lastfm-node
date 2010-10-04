@@ -53,6 +53,14 @@ ntest.describe("default LastFmNode instance")
     assert.equal("/2.0?foo=bar&baz=bash&flip=flop&api_sig=" + expectedHash, url);
   });
 
+  ntest.it("signed requests ignores format parameeter", function() {
+    var lastfm = new LastFmNode({ secret: 'secret' });
+    lastfm.params = { foo : "bar", baz : "bash", format: "json" };
+    var expectedHash = crypto.createHash("md5").update("bazbashfoobarsecret").digest("hex");
+    var url = lastfm.requestUrl(null, true);
+    assert.equal("/2.0?foo=bar&baz=bash&format=json&api_sig=" + expectedHash, url);
+  });
+
 ntest.describe("LastFmNode instance")
   ntest.before(function() {
     this.options = {
