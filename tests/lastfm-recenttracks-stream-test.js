@@ -3,7 +3,6 @@ var RecentTracksParser = require('../lib/lastfm-node/recenttracks-parser').Recen
 var FakeTracks = require('./TestData.js').FakeTracks;
 
 var assert = require('assert');
-var sys = require('sys');
 var ntest = require('ntest');
 
 ntest.describe("default stream instance");

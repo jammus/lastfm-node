@@ -1,11 +1,9 @@
-var LastFmNode = require('lastfm').LastFmNode;
-var RecentTracksParser = require('../lib/lastfm-node/recenttracks-parser').RecentTracksParser;
-var FakeTracks = require('./TestData.js').FakeTracks;
-
 var assert = require('assert');
-var sys = require('sys');
 var ntest = require('ntest');
 var crypto = require('crypto');
+var querystring = require('querystring');
+
+var LastFmNode = require('lastfm').LastFmNode;
 
 ntest.describe("default LastFmNode instance")
   ntest.before(function() { this.lastfm = new LastFmNode(); })
@@ -18,56 +16,70 @@ ntest.describe("default LastFmNode instance")
     assert.equal('ws.audioscrobbler.com', this.lastfm.host);
   })
 
-  ntest.it("requestUrl appends stringified params to url", function() {
+ntest.describe("LastFmNode request")
+  ntest.before(function() { this.lastfm = new LastFmNode(); })
+
+  ntest.it("appends stringified params to url", function() {
     this.lastfm.params = { foo : "bar", baz : "bash" };
     assert.equal("/2.0?foo=bar&baz=bash", this.lastfm.requestUrl());
   });
 
-  ntest.it("requestUrl appends additional params to url", function() {
+  ntest.it("appends additional params to url", function() {
     this.lastfm.params = { foo : "bar", baz : "bash" };
     additionalParams = { flip : "flop" };
     assert.equal("/2.0?foo=bar&baz=bash&flip=flop", this.lastfm.requestUrl(additionalParams));
   });
 
-  ntest.it("additional params leaves original untouched", function() {
+  ntest.it("leaves original additional params untouched", function() {
    this.lastfm.params = { foo: "bar" };
    var url = this.lastfm.requestUrl({ foo: "baz" });
    assert.equal("bar", this.lastfm.params.foo);         
   });
 
-  ntest.it("signed requests include hash of params plus secret", function() {
-    // see http://www.last.fm/api/webauth#6
-    var lastfm = new LastFmNode({ secret: 'secret' });
-    lastfm.params = { foo : "bar" };
-    var expectedHash =  crypto.createHash("md5").update("foobarsecret").digest("hex");
-    var url = lastfm.requestUrl(null, true);
-    assert.equal("/2.0?foo=bar&api_sig=" + expectedHash, url);
+ntest.describe("LastFmNode signature hash")
+  // see http://www.last.fm/api/webauth#6
+  ntest.before(function() { 
+    this.lastfm = new LastFmNode({ secret: 'secret' });
+    this.additionalParams = null;
+    var that = this;
+    this.whenParamsAre = function(params) {
+      that.lastfm.params = params;
+    };
+
+    this.andAdditionalParamsAre = function(params) {
+      that.additionalParams = params;
+    };
+
+    this.expectHashOf = function(unhashed) {
+      var hash = crypto.createHash("md5").update(unhashed).digest("hex");
+      var url = that.lastfm.requestUrl(that.additionalParams, true);
+      var qs = querystring.parse(url);
+      assert.equal(hash, qs.api_sig);
+    };
+  })
+
+  ntest.it("includes params plus secret", function() {
+    this.whenParamsAre({ foo : "bar" });
+    this.expectHashOf("foobarsecret");
   });
 
-  ntest.it("signed request hash order params alphabetically", function() {
-    // see http://www.last.fm/api/webauth#6
-    var lastfm = new LastFmNode({ secret: 'secret' });
-    lastfm.params = { foo : "bar", baz: "bash" };
-    var url = lastfm.requestUrl({ flip : "flop"}, true);
-    var expectedHash = crypto.createHash("md5").update("bazbashflipflopfoobarsecret").digest("hex");
-    assert.equal("/2.0?foo=bar&baz=bash&flip=flop&api_sig=" + expectedHash, url);
+  ntest.it("orders params alphabetically", function() {
+    this.whenParamsAre({ foo : "bar", baz: "bash" });
+    this.andAdditionalParamsAre({ flip : "flop"}, true);
+    this.expectHashOf("bazbashflipflopfoobarsecret");
   });
 
-  ntest.it("signed requests ignores format parameeter", function() {
-    var lastfm = new LastFmNode({ secret: 'secret' });
-    lastfm.params = { foo : "bar", baz : "bash", format: "json" };
-    var expectedHash = crypto.createHash("md5").update("bazbashfoobarsecret").digest("hex");
-    var url = lastfm.requestUrl(null, true);
-    assert.equal("/2.0?foo=bar&baz=bash&format=json&api_sig=" + expectedHash, url);
+  ntest.it("ignores format parameter", function() {
+    this.whenParamsAre({ foo : "bar", baz : "bash", format: "json" });
+    this.expectHashOf("bazbashfoobarsecret");
   });
 
-ntest.describe("LastFmNode instance")
+ntest.describe("LastFmNode options")
   ntest.before(function() {
     this.options = {
       api_key: 'abcdef12345',
       secret: 'ghijk67890'
     };
-
     this.lastfm = new LastFmNode(this.options);
   })
 

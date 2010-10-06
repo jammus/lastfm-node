@@ -4,13 +4,12 @@ var sys = require('sys');
 var ntest = require('ntest');
 var FakeData = require('./TestData.js').FakeData;
 
-ntest.describe("session authorisation");
-ntest.before(function() {
-  var that = this;
+function setupLastFmSessionFixture(context) {
+  var that = context;
 
-  this.params = null;
-  this.signed = false;
-  this.returndata = '{}';
+  context.params = null;
+  context.signed = false;
+  context.returndata = '{}';
 
   var MockLastFm = function() {};
   MockLastFm.prototype = Object.create(LastFmNode.prototype);
@@ -19,18 +18,34 @@ ntest.before(function() {
     that.signed = signed;
     callback(that.returndata); 
   };
-  this.lastfm = new MockLastFm();
+  context.lastfm = new MockLastFm();
 
-  this.authorisedSession = null;
-  this.error = null;
+  context.authorisedSession = null;
+  context.error = null;
 
-  this.session = new LastFmSession(this.lastfm);
-  this.session.addListener('authorised', function(session) {
+  context.session = new LastFmSession(context.lastfm);
+  context.session.addListener('authorised', function(session) {
     that.authorisedSession = session;
   });
-  this.session.addListener('error', function(error) {
+
+  context.session.addListener('error', function(error) {
     that.error = error;    
   });
+
+  context.whenReceiving = function(returndata) {
+    that.returndata = returndata;
+    that.session.authorise('token');
+  };
+
+  context.expectError = function(errorMessage) {
+    assert.ok(that.error);
+    assert.equal(errorMessage, that.error.message);
+  };
+};
+
+ntest.describe("a new LastFmSession");
+ntest.before(function() {
+   setupLastFmSessionFixture(this);
 });
 
 ntest.it("has no session key", function() {
@@ -41,51 +56,54 @@ ntest.it("has no user", function() {
   assert.ok(!this.user);
 });
 
-ntest.it("emits error when no token supplied", function() {
-  this.session.authorise(); 
-  assert.ok(this.error);
-  assert.equal('No token supplied', this.error.message);
+ntest.describe("a LastFmSession authorisation request")
+ntest.before(function() {
+   setupLastFmSessionFixture(this);
 });
 
-ntest.it("authorisation request contains token", function() {
+ntest.it("emits error when no token supplied", function() {
+  this.session.authorise(); 
+  this.expectError('No token supplied');
+});
+
+ntest.it("contains supplied token", function() {
   this.session.authorise('token');
   assert.equal('token', this.params.token);
 });
 
-ntest.it("authorisation request method is getSession", function() {
+ntest.it("uses getSession method", function() {
   this.session.authorise('token');
   assert.equal('auth.getsession', this.params.method);
 });
 
-ntest.it("authorisation is a signed request", function() {
+ntest.it("is signed", function() {
   this.session.authorise('token');
   assert.ok(this.signed); 
 });
 
+ntest.describe("a completed LastFmSession authorisation request")
+ntest.before(function() {
+   setupLastFmSessionFixture(this);
+});
+
 ntest.it("emits error when authorisation not successful", function() {
-  this.returndata = FakeData.AuthorisationError; 
-  this.session.authorise('token');
-  assert.ok(this.error);
-  assert.equal('Invalid method signature supplied', this.error.message);
+  this.whenReceiving(FakeData.AuthorisationError);
+  this.expectError('Invalid method signature supplied');
 });
 
 ntest.it("emits error when receiving unexpected return data", function() {
-  this.returndata = FakeData.SingleRecentTrack; 
-  this.session.authorise('token');
-  assert.ok(this.error);
-  assert.equal('Unexpected error', this.error.message);
+  this.whenReceiving(FakeData.SingleRecentTrack);
+  this.expectError('Unexpected error');
 });
 
 ntest.it("emits authorised when successful", function() {
-  this.returndata = FakeData.SuccessfulAuthorisation;
-  this.session.authorise('token');
+  this.whenReceiving(FakeData.SuccessfulAuthorisation);
   assert.ok(this.authorisedSession);
   assert.ok(!this.error);
 });
 
 ntest.it("updates session key and user when successful", function() {
-  this.returndata = FakeData.SuccessfulAuthorisation;
-  this.session.authorise('token');
+  this.whenReceiving(FakeData.SuccessfulAuthorisation);
   assert.equal('username', this.session.user);
   assert.equal('sessionkey', this.session.key);
 });
