@@ -64,9 +64,9 @@ ntest.describe("LastFmNode signature hash")
       that.params = params;
     };
 
-    this.expectHashOf = function(unhashed) {
+    this.expectHashOf = function(unhashed, includeFormat) {
       var expectedHash = crypto.createHash("md5").update(unhashed).digest("hex");
-      var actualHash = that.lastfm.signature(that.params);
+      var actualHash = that.lastfm.signature(that.params, includeFormat);
       assert.equal(expectedHash, actualHash);
     };
   })
@@ -84,6 +84,11 @@ ntest.describe("LastFmNode signature hash")
   ntest.it("ignores format parameter", function() {
     this.whenParamsAre({ foo : "bar", baz : "bash", format: "json" });
     this.expectHashOf("bazbashfoobarsecret");
+  });
+
+  ntest.it("include format if requested", function() {
+    this.whenParamsAre({ foo : "bar", baz : "bash", format: "json" });
+    this.expectHashOf("bazbashfoobarformatjsonsecret", true);
   });
 
 ntest.describe("LastFmNode options")
