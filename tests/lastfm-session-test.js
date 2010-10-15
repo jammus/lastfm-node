@@ -126,14 +126,8 @@ ntest.before(function() {
   setupLastFmSessionFixture(this);
 });
 
-ntest.it("emits error when attempting to update nowPlaying", function() {
-  this.session.update('nowplaying', FakeTracks.RunToYourGrave);
-  assert.ok(this.error);
-  assert.equal('Session is not authorised', this.error.message);
-});
-
-ntest.it("emits error when attempting to scrobble", function() {
-  this.session.update('scrobble', FakeTracks.RunToYourGrave);
+ntest.it("emits error when attempting to make update calls", function() {
+  this.session.update();
   assert.ok(this.error);
   assert.equal('Session is not authorised', this.error.message);
 });
@@ -141,21 +135,15 @@ ntest.it("emits error when attempting to scrobble", function() {
 ntest.describe("an authorised session")
 ntest.before(function() {
   setupLastFmSessionFixture(this);
+  this.session.key = 'key';
 });
 
-ntest.it("allows updating of nowPlaying", function() {
-  this.session.key = 'key';
-  this.session.update('nowplaying', FakeTracks.RunToYourGrave);
+ntest.it("allows update calls", function() {
+  this.session.update();
   assert.ok(!this.error);
 });
 
-ntest.it("allows scrobbling", function() {
-  this.session.key = 'key';
-  this.session.update('scrobble', FakeTracks.RunToYourGrave, { timestamp: 12345678 });
-  assert.ok(!this.error);
-});
-
-ntest.describe("nowPlaying requests")
+ntest.describe("update requests")
 ntest.before(function() {
   var that = this;
   setupLastFmSessionFixture(this);
@@ -171,6 +159,36 @@ ntest.it("sends a signed request", function() {
   assert.ok(this.signed);
 });
 
+ntest.it("emits error when problem updating", function() {
+  this.whenResponseIs(FakeData.UpdateError);
+  this.expectError("Signature is invalid");
+});
+
+ntest.it("emits success when updated", function() {
+  var that = this;
+  this.track = null;
+  var success = false;
+  this.session.addListener('success', function(track) {
+    that.track = track;
+    success = true;
+  });
+  this.whenResponseIs(FakeData.UpdateSuccess);
+  assert.ok(success);
+  assert.equal('Run To Your Grave', this.track.name);
+  assert.ok(!this.error);
+});
+
+ntest.describe("nowPlaying requests")
+ntest.before(function() {
+  var that = this;
+  setupLastFmSessionFixture(this);
+  this.session.key = 'key';
+  this.whenResponseIs = function(returndata) {
+    that.returndata = returndata;
+    that.session.update('nowplaying', FakeTracks.RunToYourGrave);
+  };
+});
+
 ntest.it("uses updateNowPlaying method", function() {
   this.session.update('nowplaying', FakeTracks.RunToYourGrave);
   assert.equal('user.updateNowPlaying', this.params.method);
@@ -181,22 +199,6 @@ ntest.it("sends required parameters", function() {
   assert.equal('The Mae Shi', this.params.artist);
   assert.equal('Run To Your Grave', this.params.track);
   assert.equal('key', this.params.sk);
-});
-
-ntest.it("emits error when problem updating", function() {
-  this.whenResponseIs(FakeData.UpdateNowPlayingError);
-  this.expectError("Signature is invalid");
-});
-
-ntest.it("emits success when updated", function() {
-  var that = this;
-  var success = false;
-  this.session.addListener('success', function() {
-    success = true;
-  });
-  this.whenResponseIs(FakeData.UpdateNowPlayingSuccess);
-  assert.ok(success);
-  assert.ok(!this.error);
 });
 
 ntest.describe("a scrobble request")
@@ -215,11 +217,6 @@ ntest.it("emits error when no timestamp supplied", function() {
   this.expectError("Timestamp is required for scrobbling");
 });
 
-ntest.it("sends a signed request", function() {
-  this.session.update('scrobble', FakeTracks.RunToYourGrave, { timestamp: 12345678 });
-  assert.ok(this.signed);
-});
-
 ntest.it("uses scrobble method", function() {
   this.session.update('scrobble', FakeTracks.RunToYourGrave, { timestamp: 12345678 });
   assert.equal('track.scrobble', this.params.method);
@@ -231,20 +228,4 @@ ntest.it("sends required parameters", function() {
   assert.equal('Run To Your Grave', this.params.track);
   assert.equal('key', this.params.sk);
   assert.equal(12345678, this.params.timestamp);
-});
-
-ntest.it("emits error when problem updating", function() {
-  this.whenResponseIs(FakeData.UpdateNowPlayingError);
-  this.expectError("Signature is invalid");
-});
-
-ntest.it("emits success when updated", function() {
-  var that = this;
-  var success = false;
-  this.session.addListener('success', function() {
-    success = true;
-  });
-  this.whenResponseIs(FakeData.UpdateNowPlayingSuccess);
-  assert.ok(success);
-  assert.ok(!this.error);
 });
