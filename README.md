@@ -126,7 +126,8 @@ Events:
     var LastFmNode = require('lastfm').LastFmNode;
     
     var lastfm = new LastFmNode({
-      api_key: 'abc'
+      api_key: 'abc',
+      secret: 'secret'
     });
 
     var trackStream = lastfm.stream('username');
@@ -154,6 +155,7 @@ Events:
     trackStream.start();
 
     var session = lastfm.session();
+    session.authorise(token);
     session.addListener('authorised', function(session) {
         session.update('nowplaying', track);
         session.update('scrobble', track, { timestamp: 12345678 });
