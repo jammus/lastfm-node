@@ -25,7 +25,7 @@ Using NPM
       api_key: 'abc'
     });
 
-    var trackStream = lastfm.createRecentTrackStream({user: 'username'});
+    var trackStream = lastfm.subscribe('username');
     
     trackStream.addListener('lastPlayed', function(track) {
       console.log('Last played: ' + track.name);

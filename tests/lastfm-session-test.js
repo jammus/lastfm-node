@@ -45,7 +45,7 @@ function setupLastFmSessionFixture(context) {
 
 ntest.describe("a new LastFmSession");
 ntest.before(function() {
-   setupLastFmSessionFixture(this);
+   this.session = new LastFmSession(new LastFmNode());
 });
 
 ntest.it("has no session key", function() {
@@ -54,6 +54,12 @@ ntest.it("has no session key", function() {
 
 ntest.it("has no user", function() {
   assert.ok(!this.user);
+});
+
+ntest.it("can configure key and user", function() {
+  var session = new LastFmSession(new LastFmNode(), 'user', 'sessionkey');
+  assert.equal('user', session.user);
+  assert.equal('sessionkey', session.key);
 });
 
 ntest.describe("a LastFmSession authorisation request")
@@ -121,13 +127,13 @@ ntest.before(function() {
 });
 
 ntest.it("emits error when attempting to update nowPlaying", function() {
-  this.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+  this.session.update('nowplaying', FakeTracks.RunToYourGrave);
   assert.ok(this.error);
   assert.equal('Session is not authorised', this.error.message);
 });
 
 ntest.it("emits error when attempting to scrobble", function() {
-  this.session.scrobble(FakeTracks.RunToYourGrave);
+  this.session.update('scrobble', FakeTracks.RunToYourGrave);
   assert.ok(this.error);
   assert.equal('Session is not authorised', this.error.message);
 });
@@ -139,13 +145,13 @@ ntest.before(function() {
 
 ntest.it("allows updating of nowPlaying", function() {
   this.session.key = 'key';
-  this.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+  this.session.update('nowplaying', FakeTracks.RunToYourGrave);
   assert.ok(!this.error);
 });
 
 ntest.it("allows scrobbling", function() {
   this.session.key = 'key';
-  this.session.scrobble(FakeTracks.RunToYourGrave, 12345678);
+  this.session.update('scrobble', FakeTracks.RunToYourGrave, { timestamp: 12345678 });
   assert.ok(!this.error);
 });
 
@@ -156,22 +162,22 @@ ntest.before(function() {
   this.session.key = 'key';
   this.whenResponseIs = function(returndata) {
     that.returndata = returndata;
-    that.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+    that.session.update('nowplaying', FakeTracks.RunToYourGrave);
   };
 });
 
 ntest.it("sends a signed request", function() {
-  this.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+  this.session.update('nowplaying', FakeTracks.RunToYourGrave);
   assert.ok(this.signed);
 });
 
 ntest.it("uses updateNowPlaying method", function() {
-  this.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+  this.session.update('nowplaying', FakeTracks.RunToYourGrave);
   assert.equal('user.updateNowPlaying', this.params.method);
 });
 
 ntest.it("sends required parameters", function() {
-  this.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+  this.session.update('nowplaying', FakeTracks.RunToYourGrave);
   assert.equal('The Mae Shi', this.params.artist);
   assert.equal('Run To Your Grave', this.params.track);
   assert.equal('key', this.params.sk);
@@ -200,27 +206,27 @@ ntest.before(function() {
   this.session.key = 'key';
   this.whenResponseIs = function(returndata) {
     that.returndata = returndata;
-    that.session.scrobble(FakeTracks.RunToYourGrave, 12345678);
+    that.session.update('scrobble', FakeTracks.RunToYourGrave, { timestamp: 12345678 });
   };
 });
 
 ntest.it("emits error when no timestamp supplied", function() {
-  this.session.scrobble(FakeTracks.RunToYourGrave);
+  this.session.update('scrobble', FakeTracks.RunToYourGrave);
   this.expectError("Timestamp is required for scrobbling");
 });
 
 ntest.it("sends a signed request", function() {
-  this.session.scrobble(FakeTracks.RunToYourGrave, 12345678);
+  this.session.update('scrobble', FakeTracks.RunToYourGrave, { timestamp: 12345678 });
   assert.ok(this.signed);
 });
 
 ntest.it("uses scrobble method", function() {
-  this.session.scrobble(FakeTracks.RunToYourGrave, 12345678);
+  this.session.update('scrobble', FakeTracks.RunToYourGrave, { timestamp: 12345678 });
   assert.equal('track.scrobble', this.params.method);
 });
 
 ntest.it("sends required parameters", function() {
-  this.session.scrobble(FakeTracks.RunToYourGrave, 12345678);
+  this.session.update('scrobble', FakeTracks.RunToYourGrave, { timestamp: 12345678 });
   assert.equal('The Mae Shi', this.params.artist);
   assert.equal('Run To Your Grave', this.params.track);
   assert.equal('key', this.params.sk);

@@ -8,7 +8,7 @@ var ntest = require('ntest');
 ntest.describe("default stream instance");
   ntest.before(function() {
     this.lastfm = new LastFmNode();
-    this.trackStream = new RecentTracksStream(this.lastfm, { user: 'username' });
+    this.trackStream = new RecentTracksStream(this.lastfm, 'username');
   });
 
   ntest.it("requests recent tracks", function() {
@@ -37,10 +37,7 @@ ntest.describe("Active stream");
 
     this.parser = new RecentTracksParser();
     this.lastfm = new LastFmNode();
-    this.trackStream = new RecentTracksStream(this.lastfm, {
-        user: "username",
-        parser: this.parser
-    });
+    this.trackStream = new RecentTracksStream(this.lastfm, "username", { parser: this.parser });
 
     context.errored = null;
     this.trackStream.addListener('error', function(error) {
