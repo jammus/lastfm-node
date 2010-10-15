@@ -16,3 +16,7 @@ FakeTracks.NowPlayingAndScrobbled = [{"artist":{"#text":"Super Tennis","mbid":""
 FakeData.AuthorisationError = "{ \"error\" : 13, \"message\" : \"Invalid method signature supplied\" }";
 
 FakeData.SuccessfulAuthorisation = "{ \"session\":  { \"name\": \"username\", \"key\": \"sessionkey\", \"subscriber\": \"0\"} }"; 
+
+FakeData.UpdateNowPlayingError = "{ \"lfm\": { \"@status\": \"failed\", \"error\": { \"@code\": \"13\", \"$\": \"Signature is invalid\" }, \"serverTimestamp\": \"1287136172\" }}";
+
+FakeData.UpdateNowPlayingSuccess = "{ \"lfm\": { \"@status\": \"ok\", \"message\": \"Now playing track updated\", \"serverTimestamp\": \"1287136252\" }}";

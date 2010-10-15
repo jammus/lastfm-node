@@ -37,11 +37,6 @@ function setupLastFmSessionFixture(context) {
     that.error = error;    
   });
 
-  context.whenReceiving = function(returndata) {
-    that.returndata = returndata;
-    that.session.authorise('token');
-  };
-
   context.expectError = function(errorMessage) {
     assert.ok(that.error);
     assert.equal(errorMessage, that.error.message);
@@ -88,27 +83,34 @@ ntest.it("is signed", function() {
 
 ntest.describe("a completed LastFmSession authorisation request")
 ntest.before(function() {
+   var that = this;
+
    setupLastFmSessionFixture(this);
+
+   this.whenResponseIs = function(returndata) {
+     that.returndata = returndata;
+     that.session.authorise('token');
+   };
 });
 
 ntest.it("emits error when authorisation not successful", function() {
-  this.whenReceiving(FakeData.AuthorisationError);
+  this.whenResponseIs(FakeData.AuthorisationError);
   this.expectError('Invalid method signature supplied');
 });
 
 ntest.it("emits error when receiving unexpected return data", function() {
-  this.whenReceiving(FakeData.SingleRecentTrack);
+  this.whenResponseIs(FakeData.SingleRecentTrack);
   this.expectError('Unexpected error');
 });
 
 ntest.it("emits authorised when successful", function() {
-  this.whenReceiving(FakeData.SuccessfulAuthorisation);
+  this.whenResponseIs(FakeData.SuccessfulAuthorisation);
   assert.ok(this.authorisedSession);
   assert.ok(!this.error);
 });
 
 ntest.it("updates session key and user when successful", function() {
-  this.whenReceiving(FakeData.SuccessfulAuthorisation);
+  this.whenResponseIs(FakeData.SuccessfulAuthorisation);
   assert.equal('username', this.session.user);
   assert.equal('sessionkey', this.session.key);
 });
@@ -124,6 +126,12 @@ ntest.it("emits error when attempting to update nowPlaying", function() {
   assert.equal('Session is not authorised', this.error.message);
 });
 
+ntest.it("emits error when attempting to scrobble", function() {
+  this.session.scrobble(FakeTracks.RunToYourGrave);
+  assert.ok(this.error);
+  assert.equal('Session is not authorised', this.error.message);
+});
+
 ntest.describe("an authorised session")
 ntest.before(function() {
   setupLastFmSessionFixture(this);
@@ -135,10 +143,21 @@ ntest.it("allows updating of nowPlaying", function() {
   assert.ok(!this.error);
 });
 
+ntest.it("allows scrobbling", function() {
+  this.session.key = 'key';
+  this.session.scrobble(FakeTracks.RunToYourGrave, 12345678);
+  assert.ok(!this.error);
+});
+
 ntest.describe("nowPlaying requests")
 ntest.before(function() {
+  var that = this;
   setupLastFmSessionFixture(this);
   this.session.key = 'key';
+  this.whenResponseIs = function(returndata) {
+    that.returndata = returndata;
+    that.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+  };
 });
 
 ntest.it("sends a signed request", function() {
@@ -156,4 +175,70 @@ ntest.it("sends required parameters", function() {
   assert.equal('The Mae Shi', this.params.artist);
   assert.equal('Run To Your Grave', this.params.track);
   assert.equal('key', this.params.sk);
+});
+
+ntest.it("emits error when problem updating", function() {
+  this.whenResponseIs(FakeData.UpdateNowPlayingError);
+  this.expectError("Signature is invalid");
+});
+
+ntest.it("emits success when updated", function() {
+  var that = this;
+  var success = false;
+  this.session.addListener('success', function() {
+    success = true;
+  });
+  this.whenResponseIs(FakeData.UpdateNowPlayingSuccess);
+  assert.ok(success);
+  assert.ok(!this.error);
+});
+
+ntest.describe("a scrobble request")
+ntest.before(function() {
+  var that = this;
+  setupLastFmSessionFixture(this);
+  this.session.key = 'key';
+  this.whenResponseIs = function(returndata) {
+    that.returndata = returndata;
+    that.session.scrobble(FakeTracks.RunToYourGrave, 12345678);
+  };
+});
+
+ntest.it("emits error when no timestamp supplied", function() {
+  this.session.scrobble(FakeTracks.RunToYourGrave);
+  this.expectError("Timestamp is required for scrobbling");
+});
+
+ntest.it("sends a signed request", function() {
+  this.session.scrobble(FakeTracks.RunToYourGrave, 12345678);
+  assert.ok(this.signed);
+});
+
+ntest.it("uses scrobble method", function() {
+  this.session.scrobble(FakeTracks.RunToYourGrave, 12345678);
+  assert.equal('track.scrobble', this.params.method);
+});
+
+ntest.it("sends required parameters", function() {
+  this.session.scrobble(FakeTracks.RunToYourGrave, 12345678);
+  assert.equal('The Mae Shi', this.params.artist);
+  assert.equal('Run To Your Grave', this.params.track);
+  assert.equal('key', this.params.sk);
+  assert.equal(12345678, this.params.timestamp);
+});
+
+ntest.it("emits error when problem updating", function() {
+  this.whenResponseIs(FakeData.UpdateNowPlayingError);
+  this.expectError("Signature is invalid");
+});
+
+ntest.it("emits success when updated", function() {
+  var that = this;
+  var success = false;
+  this.session.addListener('success', function() {
+    success = true;
+  });
+  this.whenResponseIs(FakeData.UpdateNowPlayingSuccess);
+  assert.ok(success);
+  assert.ok(!this.error);
 });
