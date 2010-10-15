@@ -101,7 +101,7 @@ ntest.before(function() {
 
 ntest.it("emits error when authorisation not successful", function() {
   this.whenResponseIs(FakeData.AuthorisationError);
-  this.expectError('Invalid method signature supplied');
+  this.expectError('Signature is invalid');
 });
 
 ntest.it("emits error when receiving unexpected return data", function() {
@@ -161,21 +161,7 @@ ntest.it("sends a signed request", function() {
 
 ntest.it("emits error when problem updating", function() {
   this.whenResponseIs(FakeData.UpdateError);
-  this.expectError("Signature is invalid");
-});
-
-ntest.it("emits success when updated", function() {
-  var that = this;
-  this.track = null;
-  var success = false;
-  this.session.addListener('success', function(track) {
-    that.track = track;
-    success = true;
-  });
-  this.whenResponseIs(FakeData.UpdateSuccess);
-  assert.ok(success);
-  assert.equal('Run To Your Grave', this.track.name);
-  assert.ok(!this.error);
+  this.expectError("Invalid method signature supplied");
 });
 
 ntest.describe("nowPlaying requests")
@@ -191,7 +177,7 @@ ntest.before(function() {
 
 ntest.it("uses updateNowPlaying method", function() {
   this.session.update('nowplaying', FakeTracks.RunToYourGrave);
-  assert.equal('user.updateNowPlaying', this.params.method);
+  assert.equal('track.updateNowPlaying', this.params.method);
 });
 
 ntest.it("sends required parameters", function() {
@@ -199,6 +185,20 @@ ntest.it("sends required parameters", function() {
   assert.equal('The Mae Shi', this.params.artist);
   assert.equal('Run To Your Grave', this.params.track);
   assert.equal('key', this.params.sk);
+});
+
+ntest.it("emits success when updated", function() {
+  var that = this;
+  this.track = null;
+  var success = false;
+  this.session.addListener('success', function(track) {
+    that.track = track;
+    success = true;
+  });
+  this.whenResponseIs(FakeData.UpdateNowPlayingSuccess);
+  assert.ok(success);
+  assert.equal('Run To Your Grave', this.track.name);
+  assert.ok(!this.error);
 });
 
 ntest.describe("a scrobble request")
@@ -229,3 +229,19 @@ ntest.it("sends required parameters", function() {
   assert.equal('key', this.params.sk);
   assert.equal(12345678, this.params.timestamp);
 });
+
+ntest.it("emits success when updated", function() {
+  var that = this;
+  this.track = null;
+  var success = false;
+  this.session.addListener('success', function(track) {
+    that.track = track;
+    success = true;
+  });
+  this.whenResponseIs(FakeData.ScrobbleSuccess);
+  assert.ok(success);
+  assert.equal('Run To Your Grave', this.track.name);
+  assert.ok(!this.error);
+});
+
+

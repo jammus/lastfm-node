@@ -16,10 +16,6 @@ ntest.describe("default LastFmNode instance")
     assert.equal('ws.audioscrobbler.com', this.lastfm.host);
   });
 
-  ntest.it("has writeHost", function() {
-    assert.equal('post.audioscrobbler.com', this.lastfm.writeHost);
-  });
-
 ntest.describe("LastFmNode requestUrl")
   ntest.before(function() { this.lastfm = new LastFmNode(); })
 
@@ -64,9 +60,9 @@ ntest.describe("LastFmNode signature hash")
       that.params = params;
     };
 
-    this.expectHashOf = function(unhashed, includeFormat) {
+    this.expectHashOf = function(unhashed) {
       var expectedHash = crypto.createHash("md5").update(unhashed).digest("hex");
-      var actualHash = that.lastfm.signature(that.params, includeFormat);
+      var actualHash = that.lastfm.signature(that.params);
       assert.equal(expectedHash, actualHash);
     };
   })
@@ -84,11 +80,6 @@ ntest.describe("LastFmNode signature hash")
   ntest.it("ignores format parameter", function() {
     this.whenParamsAre({ foo : "bar", baz : "bash", format: "json" });
     this.expectHashOf("bazbashfoobarsecret");
-  });
-
-  ntest.it("include format if requested", function() {
-    this.whenParamsAre({ foo : "bar", baz : "bash", format: "json" });
-    this.expectHashOf("bazbashfoobarformatjsonsecret", true);
   });
 
 ntest.describe("LastFmNode options")
