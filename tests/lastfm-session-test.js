@@ -3,6 +3,7 @@ var assert = require('assert');
 var sys = require('sys');
 var ntest = require('ntest');
 var FakeData = require('./TestData.js').FakeData;
+var FakeTracks = require('./TestData.js').FakeTracks;
 
 function setupLastFmSessionFixture(context) {
   var that = context;
@@ -13,10 +14,14 @@ function setupLastFmSessionFixture(context) {
 
   var MockLastFm = function() {};
   MockLastFm.prototype = Object.create(LastFmNode.prototype);
-  MockLastFm.prototype.createRequest = function(params, signed, callback) {
+  MockLastFm.prototype.readRequest = function(params, signed, callback) {
     that.params = params;
     that.signed = signed;
     callback(that.returndata); 
+  };
+
+  MockLastFm.prototype.writeRequest = function(params, signed, callback) {
+    this.readRequest(params, signed, callback);
   };
   context.lastfm = new MockLastFm();
 
@@ -106,4 +111,49 @@ ntest.it("updates session key and user when successful", function() {
   this.whenReceiving(FakeData.SuccessfulAuthorisation);
   assert.equal('username', this.session.user);
   assert.equal('sessionkey', this.session.key);
+});
+
+ntest.describe("an unauthorised session")
+ntest.before(function() {
+  setupLastFmSessionFixture(this);
+});
+
+ntest.it("emits error when attempting to update nowPlaying", function() {
+  this.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+  assert.ok(this.error);
+  assert.equal('Session is not authorised', this.error.message);
+});
+
+ntest.describe("an authorised session")
+ntest.before(function() {
+  setupLastFmSessionFixture(this);
+});
+
+ntest.it("allows updating of nowPlaying", function() {
+  this.session.key = 'key';
+  this.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+  assert.ok(!this.error);
+});
+
+ntest.describe("nowPlaying requests")
+ntest.before(function() {
+  setupLastFmSessionFixture(this);
+  this.session.key = 'key';
+});
+
+ntest.it("sends a signed request", function() {
+  this.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+  assert.ok(this.signed);
+});
+
+ntest.it("uses updateNowPlaying method", function() {
+  this.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+  assert.equal('user.updateNowPlaying', this.params.method);
+});
+
+ntest.it("sends required parameters", function() {
+  this.session.updateNowPlaying(FakeTracks.RunToYourGrave);
+  assert.equal('The Mae Shi', this.params.artist);
+  assert.equal('Run To Your Grave', this.params.track);
+  assert.equal('key', this.params.sk);
 });

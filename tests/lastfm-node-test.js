@@ -10,13 +10,17 @@ ntest.describe("default LastFmNode instance")
 
   ntest.it("requests json", function() {
     assert.equal('json', this.lastfm.params.format);
-  })
+  });
 
   ntest.it("has default host", function() {
     assert.equal('ws.audioscrobbler.com', this.lastfm.host);
-  })
+  });
 
-ntest.describe("LastFmNode request")
+  ntest.it("has writeHost", function() {
+    assert.equal('post.audioscrobbler.com', this.lastfm.writeHost);
+  });
+
+ntest.describe("LastFmNode requestUrl")
   ntest.before(function() { this.lastfm = new LastFmNode(); })
 
   ntest.it("appends stringified params to url", function() {
@@ -36,25 +40,34 @@ ntest.describe("LastFmNode request")
    assert.equal("bar", this.lastfm.params.foo);         
   });
 
+ntest.describe("merge params")
+  ntest.before(function() { this.lastfm = new LastFmNode(); })
+
+  ntest.it("merges two param objects", function() {
+    var merged = this.lastfm.mergeParams({'foo': 'bar'}, {'bar': 'baz'});
+    assert.equal('bar', merged.foo);
+    assert.equal('baz', merged.bar);
+  });
+
+  ntest.it("second param takes precedence", function() {
+    var merged = this.lastfm.mergeParams({'foo': 'bar'}, {'foo': 'baz'});
+    assert.equal('baz', merged.foo);
+  });
+
 ntest.describe("LastFmNode signature hash")
   // see http://www.last.fm/api/webauth#6
   ntest.before(function() { 
     this.lastfm = new LastFmNode({ secret: 'secret' });
-    this.additionalParams = null;
     var that = this;
+    this.params = null;
     this.whenParamsAre = function(params) {
-      that.lastfm.params = params;
-    };
-
-    this.andAdditionalParamsAre = function(params) {
-      that.additionalParams = params;
+      that.params = params;
     };
 
     this.expectHashOf = function(unhashed) {
-      var hash = crypto.createHash("md5").update(unhashed).digest("hex");
-      var url = that.lastfm.requestUrl(that.additionalParams, true);
-      var qs = querystring.parse(url);
-      assert.equal(hash, qs.api_sig);
+      var expectedHash = crypto.createHash("md5").update(unhashed).digest("hex");
+      var actualHash = that.lastfm.signature(that.params);
+      assert.equal(expectedHash, actualHash);
     };
   })
 
@@ -64,8 +77,7 @@ ntest.describe("LastFmNode signature hash")
   });
 
   ntest.it("orders params alphabetically", function() {
-    this.whenParamsAre({ foo : "bar", baz: "bash" });
-    this.andAdditionalParamsAre({ flip : "flop"}, true);
+    this.whenParamsAre({ foo : "bar", baz: "bash", flip : "flop"});
     this.expectHashOf("bazbashflipflopfoobarsecret");
   });
 
