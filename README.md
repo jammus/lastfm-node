@@ -6,10 +6,6 @@ Read and write to users recent plays on Last.fm.
 
     npm install lastfm
 
-### Dependencies
-
-Requires hashlib. http://github.com/brainfucker/hashlib
-
 ## Usage
 
     var LastFmNode = require('lastfm').LastFmNode;

@@ -1,7 +1,7 @@
 var assert = require('assert');
 var ntest = require('ntest');
 var querystring = require('querystring');
-var hashlib = require("hashlib");
+var crypto = require("crypto");
 
 var LastFmNode = require('lastfm').LastFmNode;
 
@@ -61,7 +61,7 @@ ntest.describe("LastFmNode signature hash")
     };
 
     this.expectHashOf = function(unhashed) {
-      var expectedHash = hashlib.md5(unhashed);
+      var expectedHash = crypto.createHash("md5").update(unhashed, "utf8").digest("hex");
       that.expectHashToBe(expectedHash);
     };
 
