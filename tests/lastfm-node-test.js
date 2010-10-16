@@ -1,7 +1,7 @@
 var assert = require('assert');
 var ntest = require('ntest');
-var crypto = require('crypto');
 var querystring = require('querystring');
+var hashlib = require("hashlib");
 
 var LastFmNode = require('lastfm').LastFmNode;
 
@@ -61,10 +61,14 @@ ntest.describe("LastFmNode signature hash")
     };
 
     this.expectHashOf = function(unhashed) {
-      var expectedHash = crypto.createHash("md5").update(unhashed).digest("hex");
-      var actualHash = that.lastfm.signature(that.params);
-      assert.equal(expectedHash, actualHash);
+      var expectedHash = hashlib.md5(unhashed);
+      that.expectHashToBe(expectedHash);
     };
+
+    this.expectHashToBe = function(hash) {
+      var actualHash = that.lastfm.signature(that.params);
+      assert.equal(hash, actualHash);
+    }
   })
 
   ntest.it("includes params plus secret", function() {
@@ -80,6 +84,12 @@ ntest.describe("LastFmNode signature hash")
   ntest.it("ignores format parameter", function() {
     this.whenParamsAre({ foo : "bar", baz : "bash", format: "json" });
     this.expectHashOf("bazbashfoobarsecret");
+  });
+
+  ntest.it("handles high characters as expected by last.fm", function() {
+    this.whenParamsAre({ track: 'Tony’s Theme (Remastered)' });
+    this.expectHashOf("trackTony’s Theme (Remastered)secret");
+    this.expectHashToBe("9f92abf69e1532ec6e4686453c117688");
   });
 
 ntest.describe("LastFmNode options")

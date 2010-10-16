@@ -4,9 +4,11 @@ Read and write to users recent plays on Last.fm.
 
 ## Installation
 
-Using NPM
-
     npm install lastfm
+
+### Dependencies
+
+Requires hashlib. http://github.com/brainfucker/hashlib
 
 ## Usage
 

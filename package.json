@@ -1,13 +1,13 @@
 {
   "name": "lastfm",
   "description": "Get continuously updated last played/now playing info for a last.fm user",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": "James Scott <jammus@gmail.com>",
   "repository": {
     "type": "git",
     "url": "http://github.com/jammus/lastfm-node.git"
   },
-  "engine": [ "node >= 0.2.0" ],
+  "engine": [ "node >= 0.2.0", "hashlib" ],
   "main": "./lib/lastfm-node"
 }
 
