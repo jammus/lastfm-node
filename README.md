@@ -19,7 +19,7 @@ Read and write to users recent plays on Last.fm.
 
 ### RecentTracksStream
 
-    lastfm.subscribe(username);
+    lastfm.stream(username);
 
 Returns: a `RecentTracksStream` instance
 
