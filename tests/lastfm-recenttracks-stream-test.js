@@ -16,7 +16,7 @@ ntest.describe("default stream instance");
   });
 
   ntest.it("configures user", function() {
-    assert.equal('username', this.trackStream.params.user);
+    assert.equal('username', this.trackStream.user);
   });
 
   ntest.it("checks every ten seconds", function() {
