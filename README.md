@@ -27,7 +27,11 @@ Methods:
 
 - *start()*
 
-        Start streaming tracks.
+        Start streaming recent track info.
+
+- *stop()*
+
+        Stop streaming recent track info.
 
 - *addListener(event, handler)*
 
