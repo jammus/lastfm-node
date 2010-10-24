@@ -1,14 +1,18 @@
-var LastFmNode = require('lastfm').LastFmNode;
+var Mocks = require('./Mocks');
 var RecentTracksParser = require('../lib/lastfm-node/recenttracks-parser').RecentTracksParser;
 var FakeTracks = require('./TestData.js').FakeTracks;
 
 var assert = require('assert');
 var ntest = require('ntest');
 
-ntest.describe("default stream instance");
+ntest.describe("a new stream instance");
   ntest.before(function() {
-    this.lastfm = new LastFmNode();
+    this.lastfm = new Mocks.MockLastFm();
     this.trackStream = new RecentTracksStream(this.lastfm, 'username');
+  });
+
+  ntest.after(function() {
+    if (this.trackStream.isStreaming) this.trackStream.stop();         
   });
 
   ntest.it("requests recent tracks", function() {
@@ -29,15 +33,39 @@ ntest.describe("default stream instance");
 
   ntest.it("accepts listeners", function() {
     this.trackStream.addListener('event', function() {});
-  })
-  
+  });
+
+  ntest.it("is not streaming", function() {
+    var isStreaming = this.trackStream.isStreaming;
+    assert.ok(!this.trackStream.isStreaming);
+    assert.equal(0, this.lastfm.readRequests);
+  });
+
+  ntest.it("starts streaming when requested", function() {
+    this.trackStream.start();
+    var isStreaming = this.trackStream.isStreaming;
+    assert.ok(this.trackStream.isStreaming);
+    assert.notEqual(0, this.lastfm.readRequests);
+  });
+
+ntest.describe("RecentTracksStream options");
+  ntest.before(function() {
+    this.lastfm = new Mocks.MockLastFm();
+  });
+
+  ntest.it("setting autostart to true begins streaming at creation", function() {
+    var trackStream = new RecentTracksStream(this.lastfm, 'username', { autostart: true} );
+    assert.ok(trackStream.isStreaming);
+    trackStream.stop();
+  });
+
 ntest.describe("Active stream");
   ntest.before(function() { 
     var context = this;
 
     this.parser = new RecentTracksParser();
-    this.lastfm = new LastFmNode();
-    this.trackStream = new RecentTracksStream(this.lastfm, "username", { parser: this.parser });
+    this.lastfm = new Mocks.MockLastFm();
+    this.trackStream = new RecentTracksStream(this.lastfm, "username", { parser: this.parser, autostart: true });
 
     context.errored = null;
     this.trackStream.addListener('error', function(error) {
@@ -73,10 +101,16 @@ ntest.describe("Active stream");
     });
   });
 
+  ntest.after(function() {
+    if (this.trackStream.isStreaming) {
+      this.trackStream.stop();
+    }
+  });
+
   ntest.it("bubbles errors", function() {
     this.parser.emit('error', new Error());
     assert.ok(this.errored);
-  })
+  });
 
   ntest.it("emits last played when track received", function() {
     this.parser.emit('track', FakeTracks.LambAndTheLion);
@@ -132,4 +166,16 @@ ntest.describe("Active stream");
     this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
     assert.equal(1, this.lastPlayCount);
     assert.equal(1, this.nowPlayingCount);
+  });
+
+  ntest.it("stops streaming when requested", function() {
+    var that = this;
+    var trackStream = new RecentTracksStream(this.lastfm);
+    trackStream.rate = .25; // drop rate to minimise wait during testing
+    trackStream.start();
+    trackStream.stop();
+    
+    var requests = this.lastfm.readRequests;
+    assert.ok(!trackStream.isStreaming);
+    setTimeout(function() { assert.equal(requests, that.lastfm.readRequests); }, trackStream.rate * 8000);
   });
