@@ -1,4 +1,9 @@
+global.Gently = require("gently");
+global.assert = require("assert");
 global.ntest = require('ntest');
 global.it = ntest.it;
 global.describe = ntest.describe;
 global.before = ntest.before;
+global.LastFmNode = require("lastfm").LastFmNode;
+global.FakeData = require("./TestData.js").FakeData;
+global.FakeTracks = require("./TestData.js").FakeTracks;

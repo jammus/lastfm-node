@@ -1,46 +1,28 @@
-var LastFmNode = require('lastfm').LastFmNode;
-var assert = require('assert');
-var sys = require('sys');
-var ntest = require('ntest');
-var FakeData = require('./TestData.js').FakeData;
-var FakeTracks = require('./TestData.js').FakeTracks;
+require('./common.js');
 
-function setupLastFmSessionFixture(context) {
-  var that = context;
-
-  context.params = null;
-  context.signed = false;
-  context.returndata = '{}';
-
-  var MockLastFm = function() {};
-  MockLastFm.prototype = Object.create(LastFmNode.prototype);
-  MockLastFm.prototype.readRequest = function(params, signed, callback) {
-    that.params = params;
-    that.signed = signed;
-    callback(that.returndata); 
-  };
-
-  MockLastFm.prototype.writeRequest = function(params, signed, callback) {
-    this.readRequest(params, signed, callback);
-  };
-  context.lastfm = new MockLastFm();
-
-  context.authorisedSession = null;
-  context.error = null;
-
+function setupFixture(context) {
+  context.lastfm = new LastFmNode();
   context.session = new LastFmSession(context.lastfm);
-  context.session.addListener('authorised', function(session) {
-    that.authorisedSession = session;
-  });
-
-  context.session.addListener('error', function(error) {
-    that.error = error;    
-  });
-
   context.expectError = function(errorMessage) {
-    assert.ok(that.error);
-    assert.equal(errorMessage, that.error.message);
+    context.gently.expect(context.session, "emit", function(event, error) {
+      assert.equal("error", event);
+      assert.equal(errorMessage, error.message);
+    });
   };
+
+  context.whenReadRequestReturns = function(returndata) {
+    context.gently.expect(context.lastfm, "readRequest", function(params, signed, callback) {
+      callback(returndata);
+    });
+  };
+
+  context.whenWriteRequestReturns = function(returndata) {
+    context.gently.expect(context.lastfm, "writeRequest", function(params, signed, callback) {
+      callback(returndata);
+    });
+  };
+
+  context.gently = new Gently();
 };
 
 ntest.describe("a new LastFmSession");
@@ -49,199 +31,190 @@ ntest.before(function() {
 });
 
 ntest.it("has no session key", function() {
-  assert.ok(!this.key);
+  assert.ok(!this.session.key);
 });
 
 ntest.it("has no user", function() {
-  assert.ok(!this.user);
+  assert.ok(!this.session.user);
 });
 
 ntest.it("can configure key and user", function() {
-  var session = new LastFmSession(new LastFmNode(), 'user', 'sessionkey');
-  assert.equal('user', session.user);
-  assert.equal('sessionkey', session.key);
+  var session = new LastFmSession(new LastFmNode(), "user", "sessionkey");
+  assert.equal("user", session.user);
+  assert.equal("sessionkey", session.key);
 });
 
 ntest.describe("a LastFmSession authorisation request")
 ntest.before(function() {
-   setupLastFmSessionFixture(this);
+   setupFixture(this);
 });
 
 ntest.it("emits error when no token supplied", function() {
+  this.expectError("No token supplied");
   this.session.authorise(); 
-  this.expectError('No token supplied');
 });
 
 ntest.it("contains supplied token", function() {
-  this.session.authorise('token');
-  assert.equal('token', this.params.token);
+  this.gently.expect(this.lastfm, "readRequest", function(params) {
+    assert.equal("token", params.token);
+  });
+  this.session.authorise("token");
 });
 
 ntest.it("uses getSession method", function() {
-  this.session.authorise('token');
-  assert.equal('auth.getsession', this.params.method);
+  this.gently.expect(this.lastfm, "readRequest", function(params) {
+    assert.equal("auth.getsession", params.method);
+  });
+  this.session.authorise("token");
 });
 
 ntest.it("is signed", function() {
-  this.session.authorise('token');
-  assert.ok(this.signed); 
+  this.gently.expect(this.lastfm, "readRequest", function(params, signed) {
+    assert.ok(signed);
+  });
+  this.session.authorise("token");
 });
 
 ntest.describe("a completed LastFmSession authorisation request")
 ntest.before(function() {
-   var that = this;
-
-   setupLastFmSessionFixture(this);
-
-   this.whenResponseIs = function(returndata) {
-     that.returndata = returndata;
-     that.session.authorise('token');
-   };
+   setupFixture(this);
 });
 
 ntest.it("emits error when authorisation not successful", function() {
-  this.whenResponseIs(FakeData.AuthorisationError);
-  this.expectError('Signature is invalid');
+  this.whenReadRequestReturns(FakeData.AuthorisationError);
+  this.expectError("Signature is invalid");
+  this.session.authorise("token");
 });
 
 ntest.it("emits error when receiving unexpected return data", function() {
-  this.whenResponseIs(FakeData.SingleRecentTrack);
-  this.expectError('Unexpected error');
+  this.whenReadRequestReturns(FakeData.SingleRecentTrack);
+  this.expectError("Unexpected error");
+  this.session.authorise("token");
 });
 
 ntest.it("emits authorised when successful", function() {
-  this.whenResponseIs(FakeData.SuccessfulAuthorisation);
-  assert.ok(this.authorisedSession);
-  assert.ok(!this.error);
+  this.whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
+  this.gently.expect(this.session, "emit", function(event) {
+    assert.equal("authorised", event);
+  });
+  this.session.authorise("token");
 });
 
 ntest.it("updates session key and user when successful", function() {
-  this.whenResponseIs(FakeData.SuccessfulAuthorisation);
-  assert.equal('username', this.session.user);
-  assert.equal('sessionkey', this.session.key);
+  this.whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
+  this.gently.expect(this.session, "emit", function(event, session) {
+    assert.equal("username", session.user);
+    assert.equal("sessionkey", session.key);
+  });
+  this.session.authorise("token");
 });
 
 ntest.describe("an unauthorised session")
 ntest.before(function() {
-  setupLastFmSessionFixture(this);
+  setupFixture(this);
 });
 
 ntest.it("emits error when attempting to make update calls", function() {
+  this.gently.expect(this.session, "emit", function(event, error) {
+    assert.equal("error", event);
+    assert.equal("Session is not authorised", error.message);
+  });
   this.session.update();
-  assert.ok(this.error);
-  assert.equal('Session is not authorised', this.error.message);
 });
 
 ntest.describe("an authorised session")
 ntest.before(function() {
-  setupLastFmSessionFixture(this);
-  this.session.key = 'key';
+  setupFixture(this);
+  this.session.key = "key";
 });
 
 ntest.it("allows update calls", function() {
   this.session.update();
-  assert.ok(!this.error);
 });
 
 ntest.describe("update requests")
 ntest.before(function() {
-  var that = this;
-  setupLastFmSessionFixture(this);
-  this.session.key = 'key';
-  this.whenResponseIs = function(returndata) {
-    that.returndata = returndata;
-    that.session.update('nowplaying', FakeTracks.RunToYourGrave);
-  };
+  setupFixture(this);
+  this.session.key = "key";
 });
 
 ntest.it("sends a signed request", function() {
-  this.session.update('nowplaying', FakeTracks.RunToYourGrave);
-  assert.ok(this.signed);
+  this.gently.expect(this.lastfm, "writeRequest", function(params, signed) {
+    assert.ok(signed);
+  });
+  this.session.update("nowplaying", FakeTracks.RunToYourGrave);
 });
 
 ntest.it("emits error when problem updating", function() {
-  this.whenResponseIs(FakeData.UpdateError);
+  this.whenWriteRequestReturns(FakeData.UpdateError);
   this.expectError("Invalid method signature supplied");
+  this.session.update("nowplaying", FakeTracks.RunToYourGrave);
 });
 
 ntest.describe("nowPlaying requests")
 ntest.before(function() {
-  var that = this;
-  setupLastFmSessionFixture(this);
-  this.session.key = 'key';
-  this.whenResponseIs = function(returndata) {
-    that.returndata = returndata;
-    that.session.update('nowplaying', FakeTracks.RunToYourGrave);
-  };
+  setupFixture(this);
+  this.session.key = "key";
 });
 
 ntest.it("uses updateNowPlaying method", function() {
-  this.session.update('nowplaying', FakeTracks.RunToYourGrave);
-  assert.equal('track.updateNowPlaying', this.params.method);
+  this.gently.expect(this.lastfm, "writeRequest", function(params) {
+    assert.equal("track.updateNowPlaying", params.method);
+  });
+  this.session.update("nowplaying", FakeTracks.RunToYourGrave);
 });
 
 ntest.it("sends required parameters", function() {
-  this.session.update('nowplaying', FakeTracks.RunToYourGrave);
-  assert.equal('The Mae Shi', this.params.artist);
-  assert.equal('Run To Your Grave', this.params.track);
-  assert.equal('key', this.params.sk);
+  this.gently.expect(this.lastfm, "writeRequest", function(params) {
+    assert.equal("The Mae Shi", params.artist);
+    assert.equal("Run To Your Grave", params.track);
+    assert.equal("key", params.sk);
+  });
+  this.session.update("nowplaying", FakeTracks.RunToYourGrave);
 });
 
 ntest.it("emits success when updated", function() {
-  var that = this;
-  this.track = null;
-  var success = false;
-  this.session.addListener('success', function(track) {
-    that.track = track;
-    success = true;
+  this.whenWriteRequestReturns(FakeData.UpdateNowPlayingSuccess);
+  this.gently.expect(this.session, "emit", function(event, track) {
+    assert.equal("success", event);
+    assert.equal("Run To Your Grave", track.name);
   });
-  this.whenResponseIs(FakeData.UpdateNowPlayingSuccess);
-  assert.ok(success);
-  assert.equal('Run To Your Grave', this.track.name);
-  assert.ok(!this.error);
+  this.session.update("nowplaying", FakeTracks.RunToYourGrave);
 });
 
 ntest.describe("a scrobble request")
 ntest.before(function() {
-  var that = this;
-  setupLastFmSessionFixture(this);
-  this.session.key = 'key';
-  this.whenResponseIs = function(returndata) {
-    that.returndata = returndata;
-    that.session.update('scrobble', FakeTracks.RunToYourGrave, { timestamp: 12345678 });
-  };
+  setupFixture(this);
+  this.session.key = "key";
 });
 
 ntest.it("emits error when no timestamp supplied", function() {
-  this.session.update('scrobble', FakeTracks.RunToYourGrave);
   this.expectError("Timestamp is required for scrobbling");
+  this.session.update("scrobble", FakeTracks.RunToYourGrave);
 });
 
 ntest.it("uses scrobble method", function() {
-  this.session.update('scrobble', FakeTracks.RunToYourGrave, { timestamp: 12345678 });
-  assert.equal('track.scrobble', this.params.method);
+  this.gently.expect(this.lastfm, "writeRequest", function(params) {
+    assert.equal("track.scrobble", params.method);
+  });
+  this.session.update("scrobble", FakeTracks.RunToYourGrave, { timestamp: 12345678 });
 });
 
 ntest.it("sends required parameters", function() {
-  this.session.update('scrobble', FakeTracks.RunToYourGrave, { timestamp: 12345678 });
-  assert.equal('The Mae Shi', this.params.artist);
-  assert.equal('Run To Your Grave', this.params.track);
-  assert.equal('key', this.params.sk);
-  assert.equal(12345678, this.params.timestamp);
+  this.gently.expect(this.lastfm, "writeRequest", function(params) {
+    assert.equal("The Mae Shi", params.artist);
+    assert.equal("Run To Your Grave", params.track);
+    assert.equal("key", params.sk);
+    assert.equal(12345678, params.timestamp);
+  });
+  this.session.update("scrobble", FakeTracks.RunToYourGrave, { timestamp: 12345678 });
 });
 
 ntest.it("emits success when updated", function() {
-  var that = this;
-  this.track = null;
-  var success = false;
-  this.session.addListener('success', function(track) {
-    that.track = track;
-    success = true;
+  this.whenWriteRequestReturns(FakeData.ScrobbleSuccess);
+  this.gently.expect(this.session, "emit", function(event, track) {
+    assert.equal("success", event);
+    assert.equal("Run To Your Grave", track.name);
   });
-  this.whenResponseIs(FakeData.ScrobbleSuccess);
-  assert.ok(success);
-  assert.equal('Run To Your Grave', this.track.name);
-  assert.ok(!this.error);
+  this.session.update("scrobble", FakeTracks.RunToYourGrave, { timestamp: 12345678 });
 });
-
-

@@ -1,9 +1,5 @@
 require('./common.js');
-var assert = require('assert');
-var Gently = require('gently');
-var LastFmNode = require('lastfm').LastFmNode;
 var LastFmInfo = require('lastfm/lastfm-info').LastFmInfo;
-var FakeData = require('./TestData').FakeData;
 
 var basicSetup = function() {
   this.lastfm = new LastFmNode();
