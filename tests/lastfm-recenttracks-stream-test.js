@@ -1,6 +1,7 @@
 var Mocks = require('./Mocks');
-var RecentTracksParser = require('../lib/lastfm-node/recenttracks-parser').RecentTracksParser;
+var RecentTracksParser = require('lastfm/recenttracks-parser').RecentTracksParser;
 var FakeTracks = require('./TestData.js').FakeTracks;
+var RecentTracksStream = require('lastfm/recenttracks-stream').RecentTracksStream;
 
 var assert = require('assert');
 var ntest = require('ntest');
