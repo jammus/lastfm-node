@@ -8,6 +8,7 @@
     "url": "http://github.com/jammus/lastfm-node.git"
   },
   "engine": [ "node >= 0.2.0"],
-  "main": "./lib/lastfm-node"
+  "directories": { "lib": "./lib/lastfm-node" },
+  "main": "./lib/lastfm-node/index"
 }
 

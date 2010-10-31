@@ -177,5 +177,5 @@ ntest.describe("Active stream");
     
     var requests = this.lastfm.readRequests;
     assert.ok(!trackStream.isStreaming);
-    setTimeout(function() { assert.equal(requests, that.lastfm.readRequests); }, trackStream.rate * 8000);
+    setTimeout(function() { assert.equal(requests, that.lastfm.readRequests); }, trackStream.rate * 4000);
   });
