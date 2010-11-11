@@ -1,41 +1,39 @@
-var RecentTracksParser = require('../lib/lastfm-node/recenttracks-parser').RecentTracksParser;
-var assert = require('assert');
-var ntest = require('ntest');
-var FakeData = require('./TestData.js').FakeData;
+require("./common.js");
 
-ntest.describe("parser")
-  ntest.before(function() { 
+var RecentTracksParser = require("lastfm/recenttracks-parser").RecentTracksParser;
+
+describe("parser")
+  before(function() { 
     this.parser = new RecentTracksParser();
-    this.error = null;
-    this.track = null;
-    var that = this;
-    this.parser.addListener("error", function(error) {
-       that.error = error; 
-    });
-    this.parser.addListener("track", function(track) {
-       that.track = track;
-    });
+    this.gently = new Gently();
   })
 
-  ntest.it("throws exception when empty", function() {
-      this.parser.parse('');
-      assert.ok(this.error);
+  it("emits error when empty", function() {
+    this.gently.expect(this.parser, "emit", function(event, error) {
+      assert.equal("error", event);
+    });
+    this.parser.parse('');
   })
 
-  ntest.it("thows exception when no recenttracks object", function() {
+  it("emits error when no recenttracks object", function() {
+    this.gently.expect(this.parser, "emit", function(event, error) {
+      assert.equal("error", event);
+    });
     this.parser.parse(FakeData.UnknownObject);
-    assert.ok(this.error);
   })
 
-  ntest.it("returns object for value of recenttracks.track", function() {
+  it("emits track for value of recenttracks.track", function() {
+    this.gently.expect(this.parser, "emit", function(event, track) {
+      assert.equal("track", event);
+      assert.equal(42, track);
+    });
     this.parser.parse(FakeData.SingleRecentTrack);
-    assert.equal(42, this.track);
   })
 
-  ntest.it("returns multiple track when array", function() {
+  it("returns multiple track when array", function() {
+    this.gently.expect(this.parser, "emit", function(event, tracks) {
+      assert.equal("first", tracks[0]);
+      assert.equal("second", tracks[1]);
+    });
     this.parser.parse(FakeData.MultipleRecentsTracks);
-    assert.equal("first", this.track[0]);
-    assert.equal("second", this.track[1]);
   })
-
-

@@ -1,182 +1,172 @@
-var Mocks = require('./Mocks');
-var RecentTracksParser = require('lastfm/recenttracks-parser').RecentTracksParser;
-var FakeTracks = require('./TestData.js').FakeTracks;
-var RecentTracksStream = require('lastfm/recenttracks-stream').RecentTracksStream;
+require("./common.js");
 
-var assert = require('assert');
-var ntest = require('ntest');
+var RecentTracksParser = require("lastfm/recenttracks-parser").RecentTracksParser;
+var RecentTracksStream = require("lastfm/recenttracks-stream").RecentTracksStream;
 
-ntest.describe("a new stream instance");
-  ntest.before(function() {
-    this.lastfm = new Mocks.MockLastFm();
-    this.trackStream = new RecentTracksStream(this.lastfm, 'username');
+describe("a new stream instance");
+  before(function() {
+    this.gently = new Gently();
+    this.lastfm = new LastFmNode();
+    this.trackStream = new RecentTracksStream(this.lastfm, "username");
   });
 
-  ntest.after(function() {
-    if (this.trackStream.isStreaming) this.trackStream.stop();         
+  it("configures user", function() {
+    assert.equal("username", this.trackStream.user);
   });
 
-  ntest.it("requests recent tracks", function() {
-    assert.equal('user.getrecenttracks', this.trackStream.params.method);
-  });
-
-  ntest.it("configures user", function() {
-    assert.equal('username', this.trackStream.user);
-  });
-
-  ntest.it("checks every ten seconds", function() {
+  it("checks every ten seconds", function() {
     assert.equal(10, this.trackStream.rate);
   });
 
-  ntest.it("only requests the most recent track", function() {
+  it("accepts listeners", function() {
+    this.trackStream.addListener("event", function() {});
+  });
+
+  it("is not streaming", function() {
+    var isStreaming = this.trackStream.isStreaming;
+    assert.ok(!this.trackStream.isStreaming);
+  });
+
+  it("requests recent tracks", function() {
+    assert.equal("user.getrecenttracks", this.trackStream.params.method);
+  });
+
+  it("only requests the most recent track", function() {
     assert.equal(1, this.trackStream.params.limit);
   });
 
-  ntest.it("accepts listeners", function() {
-    this.trackStream.addListener('event', function() {});
-  });
-
-  ntest.it("is not streaming", function() {
-    var isStreaming = this.trackStream.isStreaming;
-    assert.ok(!this.trackStream.isStreaming);
-    assert.equal(0, this.lastfm.readRequests);
-  });
-
-  ntest.it("starts streaming when requested", function() {
-    this.trackStream.start();
-    var isStreaming = this.trackStream.isStreaming;
-    assert.ok(this.trackStream.isStreaming);
-    assert.notEqual(0, this.lastfm.readRequests);
-  });
-
-ntest.describe("RecentTracksStream options");
-  ntest.before(function() {
-    this.lastfm = new Mocks.MockLastFm();
-  });
-
-  ntest.it("setting autostart to true begins streaming at creation", function() {
-    var trackStream = new RecentTracksStream(this.lastfm, 'username', { autostart: true} );
-    assert.ok(trackStream.isStreaming);
-    trackStream.stop();
-  });
-
-ntest.describe("Active stream");
-  ntest.before(function() { 
-    var context = this;
-
+describe("An active stream");
+  before(function() { 
     this.parser = new RecentTracksParser();
-    this.lastfm = new Mocks.MockLastFm();
-    this.trackStream = new RecentTracksStream(this.lastfm, "username", { parser: this.parser, autostart: true });
+    this.lastfm = new LastFmNode();
+    this.trackStream = new RecentTracksStream(this.lastfm, "username", { parser: this.parser });
+    this.gently = new Gently();
+  });
 
-    context.errored = null;
-    this.trackStream.addListener('error', function(error) {
-      context.errored = error;
+  it("bubbles errors", function() {
+    this.gently.expect(this.trackStream, "emit", function(event) {
+      assert.equal("error", event);
     });
-   
-    context.lastPlay = null;
-    context.lastPlayCount = 0;
-    this.trackStream.addListener('lastPlayed', function(track) {
-      context.lastPlay = track;
-      context.lastPlayCount++;
+    this.parser.emit("error", new Error());
+  });
+
+  it("emits last played when track received", function() {
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("lastPlayed", event);
+      assert.equal("Lamb and the Lion", track.name);
     });
+    this.parser.emit("track", FakeTracks.LambAndTheLion);
+  });
 
-    context.nowPlaying = null;
-    context.nowPlayingCount = 0;
-    this.trackStream.addListener('nowPlaying', function(track) {
-      context.nowPlaying = track;
-      context.nowPlayingCount++;
+  it("emits now playing if track flagged now playing", function() {
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("nowPlaying", event);
+      assert.equal("Run To Your Grave", track.name);
     });
+    this.parser.emit("track", FakeTracks.RunToYourGrave_NP);
+  });
 
-    context.stoppedPlaying = null;
-    context.stoppedPlayingCount = 0;
-    this.trackStream.addListener('stoppedPlaying', function(track) {
-      context.stoppedPlaying = track;
-      context.stoppedPlayingCount++;
+  it("emits now playing and last played if both received", function() {
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("nowPlaying", event);
+      assert.equal("Theme Song", track.name);
     });
-
-    context.scrobbled = null;
-    context.scrobbledCount = 0;
-    this.trackStream.addListener('scrobbled', function(track) {
-      context.scrobbled = track;
-      context.scrobbledCount++;
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("lastPlayed", event);
+      assert.equal("Over The Moon", track.name);
     });
+    this.parser.emit("track", FakeTracks.NowPlayingAndScrobbled);
   });
 
-  ntest.after(function() {
-    if (this.trackStream.isStreaming) {
-      this.trackStream.stop();
-    }
+  it("does not re-emit lastPlayed on receipt of same track", function() {
+    this.gently.expect(this.trackStream, "emit", 1, function(event, track) {
+      assert.equal("lastPlayed", event);
+      assert.equal("Lamb and the Lion", track.name);
+    });
+    this.parser.emit("track", FakeTracks.LambAndTheLion);
+    this.parser.emit("track", FakeTracks.LambAndTheLion);
   });
 
-  ntest.it("bubbles errors", function() {
-    this.parser.emit('error', new Error());
-    assert.ok(this.errored);
+  it("does not re-emit nowPlaying on receipt of same track", function() {
+    this.gently.expect(this.trackStream, "emit", 1, function(event, track) {
+      assert.equal("nowPlaying", event);
+      assert.equal("Run To Your Grave", track.name);
+    });
+    this.parser.emit("track", FakeTracks.RunToYourGrave_NP);
+    this.parser.emit("track", FakeTracks.RunToYourGrave_NP);
   });
 
-  ntest.it("emits last played when track received", function() {
-    this.parser.emit('track', FakeTracks.LambAndTheLion);
-    assert.ok(this.lastPlay);
-    assert.equal('Lamb and the Lion', this.lastPlay.name);
+  it("emits stoppedPlaying track when now playing stops", function() {
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("lastPlayed", event);
+      assert.equal("Run To Your Grave", track.name);
+    });
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("nowPlaying", event);
+      assert.equal("Run To Your Grave", track.name);
+    });
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("stoppedPlaying", event);
+      assert.equal("Run To Your Grave", track.name);
+    });
+    this.parser.emit("track", FakeTracks.RunToYourGrave);
+    this.parser.emit("track", FakeTracks.RunToYourGrave_NP);
+    this.parser.emit("track", FakeTracks.RunToYourGrave);
   });
 
-  ntest.it("emits now playing if track flagged now playing", function() {
-    this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
-
-    assert.ok(!this.lastPlay);
-    assert.ok(this.nowPlaying);
-    assert.equal('Run To Your Grave', this.nowPlaying.name); 
-  });
-
-  ntest.it("emits now playing and last played if both received", function() {
-    this.parser.emit('track', FakeTracks.NowPlayingAndScrobbled);
-    assert.ok(this.lastPlay);
-    assert.equal('Over The Moon', this.lastPlay.name);
-    assert.ok(this.nowPlaying);
-    assert.equal('Theme Song', this.nowPlaying.name);
-  });
-
-  ntest.it("does not re-emit lastPlayed on receipt of same track", function() {
-    this.parser.emit('track', FakeTracks.LambAndTheLion);
-    this.parser.emit('track', FakeTracks.LambAndTheLion);
-    assert.equal(1, this.lastPlayCount);
-  });
-
-  ntest.it("does not re-emit nowPlaying on receipt of same track", function() {
-    this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
-    this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
-    assert.equal(1, this.nowPlayingCount);
-  });
-
-  ntest.it("emits stoppedPlaying with last scrobbled track when now playing stops", function() {
-    this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
-    this.parser.emit('track', FakeTracks.RunToYourGrave);
-    assert.equal(1, this.stoppedPlayingCount);
-    assert.equal('Run To Your Grave', this.stoppedPlaying.name);
-  });
-
-  ntest.it("emits scrobbled when last play changes", function() {
-    this.parser.emit('track', FakeTracks.LambAndTheLion);
-    this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
-    this.parser.emit('track', FakeTracks.RunToYourGrave);
-    assert.equal(1, this.scrobbledCount);
-    assert.equal('Run To Your Grave', this.scrobbled.name);
+  it("emits scrobbled when last play changes", function() {
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("lastPlayed", event);
+      assert.equal("Lamb and the Lion", track.name);
+    });
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("nowPlaying", event);
+      assert.equal("Run To Your Grave", track.name);
+    });
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("scrobbled", event);
+      assert.equal("Run To Your Grave", track.name);
+    });
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("stoppedPlaying", event);
+      assert.equal("Run To Your Grave", track.name);
+    });
+    this.parser.emit("track", FakeTracks.LambAndTheLion);
+    this.parser.emit("track", FakeTracks.RunToYourGrave_NP);
+    this.parser.emit("track", FakeTracks.RunToYourGrave);
   });
   
-  ntest.it("emits nowPlaying when track same as lastPlayed", function() {
-    this.parser.emit('track', FakeTracks.RunToYourGrave);
-    this.parser.emit('track', FakeTracks.RunToYourGrave_NP);
-    assert.equal(1, this.lastPlayCount);
-    assert.equal(1, this.nowPlayingCount);
+  it("emits nowPlaying when track same as lastPlayed", function() {
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("lastPlayed", event);
+      assert.equal("Run To Your Grave", track.name);
+    });
+    this.gently.expect(this.trackStream, "emit", function(event, track) {
+      assert.equal("nowPlaying", event);
+      assert.equal("Run To Your Grave", track.name);
+    });
+    this.parser.emit("track", FakeTracks.RunToYourGrave);
+    this.parser.emit("track", FakeTracks.RunToYourGrave_NP);
   });
 
-  ntest.it("stops streaming when requested", function() {
-    var that = this;
+describe("Streaming")
+  before(function() { 
+    this.lastfm = new LastFmNode();
+    this.gently = new Gently();
+  });
+
+  it("starts and stops streaming when requested", function() {
+    this.gently.expect(this.lastfm, "readRequest", 1, function(params, signed, callback) {
+    });
     var trackStream = new RecentTracksStream(this.lastfm);
-    trackStream.rate = .25; // drop rate to minimise wait during testing
     trackStream.start();
     trackStream.stop();
-    
-    var requests = this.lastfm.readRequests;
     assert.ok(!trackStream.isStreaming);
-    setTimeout(function() { assert.equal(requests, that.lastfm.readRequests); }, trackStream.rate * 4000);
+  });
+
+  it("starts automatically when autostart set to true", function() {
+    this.gently.expect(this.lastfm, "readRequest", function() {});
+    var trackStream = new RecentTracksStream(this.lastfm, "username", { autostart: true} );
+    assert.ok(trackStream.isStreaming);
+    trackStream.stop();
   });

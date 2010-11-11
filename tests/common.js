@@ -4,6 +4,7 @@ global.ntest = require('ntest');
 global.it = ntest.it;
 global.describe = ntest.describe;
 global.before = ntest.before;
+global.after = ntest.after;
 global.LastFmNode = require("lastfm").LastFmNode;
 global.FakeData = require("./TestData.js").FakeData;
 global.FakeTracks = require("./TestData.js").FakeTracks;
