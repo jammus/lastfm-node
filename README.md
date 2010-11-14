@@ -95,15 +95,12 @@ Methods:
 
 - *authorise(token, [options])*
 
-        Authorises user with Last.fm api. See last.fm documentation.
-        `options` can include listeners for `authorised` and `error` events.
+ Authorises user with Last.fm api. See last.fm documentation.
         Options:
-         - *authorised*
-            function(session)
-        Listener for `authorised` event. See below.
+       - *authorised* : `function(session)`
+        Listener for *authorised* event. See below.
 
-         - *error*
-           function(error)
+       - *error* : `function(error)`
         Listener for `error` event. See below.
 
 - *on(event, handler)*
