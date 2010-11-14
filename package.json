@@ -1,7 +1,7 @@
 {
   "name": "lastfm",
   "description": "Get continuously updated last played/now playing info for a last.fm user",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "author": "James Scott <jammus@gmail.com>",
   "repository": {
     "type": "git",
