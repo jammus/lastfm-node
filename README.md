@@ -47,6 +47,10 @@ Options:
 
         Start streaming automatically. Defaults to false.
 
+- *lastPlayed*, *nowPlaying*, *scrobbled*, *stoppedPlaying*, *error*
+
+        Event listeners.
+
 Events:
 
 - *lastPlayed(track)*
@@ -131,6 +135,23 @@ Events:
 
         Ruh-roh.
 
+### LastFmInfo
+
+    lastfm.info(itemtype, [options]);
+
+Returns: a `LastFmInfo` instance.
+
+Gets extended info about specified item.
+
+Public properties:
+
+- *itemtype*
+
+        Valid types: `"user"`
+
+Options:
+
+        Request parameters. See lastfm API for details.
 
 ## Example
 
