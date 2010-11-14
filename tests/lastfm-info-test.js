@@ -33,3 +33,65 @@ describe("a new info instance")
     var info = new LastFmInfo(this.lastfm, "track");
   });
   
+  it("calls unsigned methods", function() {
+    this.gently.expect(this.lastfm, "readRequest", function(params, signed) {
+      assert.equal(false, signed);
+    });
+    var info = new LastFmInfo(this.lastfm, "user");
+  });
+
+  it("passes through additional parameters", function() {
+    this.gently.expect(this.lastfm, "readRequest", function(params) {
+      assert.equal("username", params.user);
+      assert.equal("anything", params.arbitrary);
+    });
+    new LastFmInfo(this.lastfm, "user", { user: "username", arbitrary: "anything" });
+  });
+
+  it("doesnt pass through callback parameters", function() {
+    this.gently.expect(this.lastfm, "readRequest", function(params) {
+      assert.ok(!params.error);
+      assert.ok(!params.success);
+    });
+    new LastFmInfo(this.lastfm, "user", { error: function() {}, success: function() {} });
+  });
+
+describe("when receiving data")
+  before(function() {
+    this.gently = new Gently();
+    this.lastfm = new LastFmNode();
+  });
+
+  it("emits error if response contains error", function() {
+    this.gently.expect(this.lastfm, "readRequest", function(params, signed, callback) {
+      callback(FakeData.NotEnoughTrackInfo);
+    });
+    new LastFmInfo(this.lastfm, "track", {
+      error: this.gently.expect(function errorHandler(error) {
+        assert.equal("You must supply either a track & artist name or a track mbid.", error.message);
+      })
+    });
+  });
+
+  it("emits error when receiving unexpected data", function() {
+    this.gently.expect(this.lastfm, "readRequest", function(params, signed, callback) {
+      callback(FakeData.SuccessfulAuthorisation);
+    });
+    new LastFmInfo(this.lastfm, "track", {
+      error: this.gently.expect(function errorHandler(error) {
+        assert.equal("Unexpected error", error.message);
+      })
+    });
+  });
+
+  it("emits success with received data when matches expected type", function() {
+    this.gently.expect(this.lastfm, "readRequest", function(params, signed, callback) {
+      callback(FakeData.RunToYourGraveTrackInfo);
+    });
+    new LastFmInfo(this.lastfm, "track", {
+      success: this.gently.expect(function success(track) {
+        assert.equal("Run To Your Grave", track.name);
+        assert.equal("232000", track.duration);
+      })
+    });
+  });
