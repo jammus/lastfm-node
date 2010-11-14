@@ -35,6 +35,37 @@ describe("a new stream instance");
     assert.equal(1, this.trackStream.params.limit);
   });
 
+  it("event handlers can be specified in options", function() {
+    var handler = { 
+      error: function () {console.log("esafas");},
+      lastPlayed: function() {},
+      nowPlaying: function() {},
+      stoppedPlaying: function() {},
+      scrobbled: function() {}
+    };
+   
+    this.gently.expect(handler, "error");
+    this.gently.expect(handler, "lastPlayed");
+    this.gently.expect(handler, "nowPlaying");
+    this.gently.expect(handler, "stoppedPlaying");
+    this.gently.expect(handler, "scrobbled");
+
+
+    var trackStream = new RecentTracksStream(this.lastfm, "username", {
+      error: handler.error,
+      lastPlayed: handler.lastPlayed,
+      nowPlaying: handler.nowPlaying,
+      stoppedPlaying: handler.stoppedPlaying,
+      scrobbled: handler.scrobbled
+    });
+
+    trackStream.emit("error");
+    trackStream.emit("lastPlayed");
+    trackStream.emit("nowPlaying");
+    trackStream.emit("stoppedPlaying");
+    trackStream.emit("scrobbled");
+  });
+
 describe("An active stream");
   before(function() { 
     this.parser = new RecentTracksParser();
