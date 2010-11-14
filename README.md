@@ -79,7 +79,7 @@ Events:
 
 Returns: a `LastFmSession` instance.
 
-If no key is supplied then the authorise() method must be used before submissions can be made. See the last.fm API documentation for more info.
+If no key is supplied then the authorise() method must be used before the session can be used to make authenticated calls. See the last.fm API documentation for more info.
 
 Public properties:
 
@@ -130,7 +130,7 @@ Returns a `LastFmUpdate` instance.
 
 Valid methods are 'nowplaying' and 'scrobble'.
 
-A authorised `LastFmSession` instance is required to make a successful update.
+An authorised `LastFmSession` instance is required to make a successful update.
 
 Options:
 
@@ -189,7 +189,8 @@ Options:
        Params as specified in Last.fm API, eg user: "username"
 
 Special cases:
-        When requesting track info the `track` param can be either the track name or a track object as returned by `RecentTracksStream`.
+
+When requesting track info the `track` param can be either the track name or a track object as returned by `RecentTracksStream`.
 
 
 ## Example
@@ -226,10 +227,11 @@ Special cases:
     trackStream.start();
 
     var session = lastfm.session();
-    session.authorise(token);
-    session.on('authorised', function(session) {
-        lastfm.update('nowplaying', session, { track: track } );
-        lastfm.update('scrobble', session, { track: track, timestamp: 12345678 });
+    session.authorise(token, {
+       authorised: function(session) {
+          lastfm.update('nowplaying', session, { track: track } );
+          lastfm.update('scrobble', session, { track: track, timestamp: 12345678 });
+       }
     });
 
 ## Influences
