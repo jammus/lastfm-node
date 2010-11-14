@@ -33,7 +33,7 @@ describe("a new info instance")
     var info = new LastFmInfo(this.lastfm, "track");
   });
 
-  it("calls [itemtype].getinfo", function() {
+  it("allows all [itemtype].getinfo calls", function() {
     this.gently.expect(this.lastfm, "readRequest", function(params) {
       assert.equal("event.getinfo", params.method);
     });
