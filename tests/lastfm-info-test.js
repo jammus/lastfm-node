@@ -29,6 +29,7 @@ describe("a new info instance")
   });
 
   it("allows requests for track info", function() {
+    this.gently.expect(this.lastfm, "readRequest");
     var info = new LastFmInfo(this.lastfm, "track");
   });
   
