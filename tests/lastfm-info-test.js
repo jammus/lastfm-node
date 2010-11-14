@@ -15,12 +15,12 @@ describe("a new info instance")
     info.emit("success");
   });
   
-  it("emits error for unknown info type", function() {
+  it("emits error if type not specified", function() {
     var handler = { error: function() {}};
     this.gently.expect(handler, "error", function(error) {
-      assert.equal("Unknown item type", error.message);
+      assert.equal("Item type not specified", error.message);
     });
-    var info = new LastFmInfo(this.lastfm, "unknown", { error: handler.error });
+    var info = new LastFmInfo(this.lastfm, "", { error: handler.error });
   });
   
   it("allows requests for user info", function() {
@@ -32,6 +32,13 @@ describe("a new info instance")
     this.gently.expect(this.lastfm, "readRequest");
     var info = new LastFmInfo(this.lastfm, "track");
   });
+
+  it("calls [itemtype].getinfo", function() {
+    this.gently.expect(this.lastfm, "readRequest", function(params) {
+      assert.equal("event.getinfo", params.method);
+    });
+    new LastFmInfo(this.lastfm, "event");
+  });
   
   it("calls unsigned methods", function() {
     this.gently.expect(this.lastfm, "readRequest", function(params, signed) {
@@ -40,7 +47,7 @@ describe("a new info instance")
     var info = new LastFmInfo(this.lastfm, "user");
   });
 
-  it("passes through additional parameters", function() {
+  it("passes through parameters", function() {
     this.gently.expect(this.lastfm, "readRequest", function(params) {
       assert.equal("username", params.user);
       assert.equal("anything", params.arbitrary);
