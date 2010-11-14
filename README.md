@@ -144,13 +144,15 @@ Public properties:
 
 - *itemtype*
 
-        Valid types: `"user"`
+        Any Last.fm item with a getInfo method. eg user, track, artist, etc.
 
 Options:
-        Additioanl request parameters. See lastfm API for details.
         - *success* : `function(info)`
         - *error* : `function(error)`
-        Event handlers
+        - various params as specified in Last.fm API, eg user: "username"
+
+Special cases:
+        When requesting track info the `track` param can be either the track name or a track object as returned by `RecentTracksStream`.
 
 
 ## Example
