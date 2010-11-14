@@ -111,18 +111,46 @@ Methods:
 
         Removes the listener for the specified event.
 
-- *update(method, track, options)*
-
-        Update nowPlaying or scrobble a track to authenticated user's plays.
-        Valid methods are 'nowplaying' and 'scrobble'.
-        Timestamp is a required option for scrobble requests. Timestamp is in unix time (seconds since 01-01-1970 and is in UTC time).
-
 Events:
 
 - *authorised(session)*
 
         Authorisation of session was successful.
         Note: Only emitted after a call to authorise(). Keys supplied in the constructor are assumed to be valid.
+
+- *error(track, error)*
+
+        Ruh-roh.
+
+### LastFmUpdate
+
+    lastfm.update(method, session, options);
+
+Returns a `LastFmUpdate` instance. 
+
+Valid methods are 'nowplaying' and 'scrobble'.
+
+A authorised `LastFmSession` instance is required to make a successful update.
+
+Options:
+
+- *track*
+    
+        Track for nowplaying and scrobble requests. Uses same format as returned by `RecentTracksStream` events.
+
+- *timestamp*
+
+        Required for scrobble requests. Timestamp is in unix time (seconds since 01-01-1970 and is in UTC time).
+
+- *success*
+
+        Listener for `success` event.
+
+- *error*
+
+       Listener for `error` event.
+
+Events:
 
 - *success(track)*
 
@@ -147,9 +175,18 @@ Public properties:
         Any Last.fm item with a getInfo method. eg user, track, artist, etc.
 
 Options:
-        - *success* : `function(info)`
-        - *error* : `function(error)`
-        - various params as specified in Last.fm API, eg user: "username"
+
+- *success*
+
+        Listener for `success` event.
+
+- *error*
+
+       Listener for `error` event.
+
+- *various*
+
+       Params as specified in Last.fm API, eg user: "username"
 
 Special cases:
         When requesting track info the `track` param can be either the track name or a track object as returned by `RecentTracksStream`.
@@ -166,23 +203,23 @@ Special cases:
 
     var trackStream = lastfm.stream('username');
     
-    trackStream.addListener('lastPlayed', function(track) {
+    trackStream.on('lastPlayed', function(track) {
       console.log('Last played: ' + track.name);
     });
     
-    trackStream.addListener('nowPlaying', function(track) {
+    trackStream.on('nowPlaying', function(track) {
       console.log('Now playing: ' + track.name);
     });
 
-    trackStream.addListener('scrobbled', function(track) {
+    trackStream.on('scrobbled', function(track) {
       console.log('Scrobbled: ' + track.name);
     });
 
-    trackStream.addListener('stoppedPlaying', function(track) {
+    trackStream.on('stoppedPlaying', function(track) {
       console.log('Stopped playing: ' + track.name);
     });
 
-    trackStream.addListener('error', function(error) {
+    trackStream.on('error', function(error) {
       console.log('Error: '  + error.message);
     });
 
@@ -190,9 +227,9 @@ Special cases:
 
     var session = lastfm.session();
     session.authorise(token);
-    session.addListener('authorised', function(session) {
-        session.update('nowplaying', track);
-        session.update('scrobble', track, { timestamp: 12345678 });
+    session.on('authorised', function(session) {
+        lastfm.update('nowplaying', session, { track: track } );
+        lastfm.update('scrobble', session, { track: track, timestamp: 12345678 });
     });
 
 ## Influences
