@@ -101,6 +101,16 @@ it("emits authorised when successful", function() {
   this.session.authorise("token");
 });
 
+it("can have error handler specified with authorise call", function() {
+  var handler = { error: function(error) { } };
+  this.gently.expect(handler, "error", function(error) {
+    assert.equal("No token supplied", error.message); 
+  });
+  this.session.authorise("", {
+    error: handler.error
+  });
+});
+
 it("updates session key and user when successful", function() {
   this.whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
   this.gently.expect(this.session, "emit", function(event, session) {
@@ -108,6 +118,18 @@ it("updates session key and user when successful", function() {
     assert.equal("sessionkey", session.key);
   });
   this.session.authorise("token");
+});
+
+it("can have authorised handler specified with authorise call", function() {
+  var handler = { authorised: function(session) { } };
+  this.whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
+  this.gently.expect(handler, "authorised", function(session) {
+    assert.equal("username", session.user);
+    assert.equal("sessionkey", session.key);
+  });
+  this.session.authorise("token", {
+    authorised: handler.authorised
+  });
 });
 
 describe("an unauthorised session")
