@@ -33,11 +33,11 @@ Methods:
 
         Stop streaming recent track info.
 
-- *addListener(event, handler)*
+- *on(event, listener)*
 
         Adds a listener for the specified event.
 
-- *removeListener(event, handler)*
+- *removeListener(event, listener)*
 
         Removes the listener for the specified event.
 
@@ -89,11 +89,20 @@ Public properties:
 
 Methods:
 
-- *authorise(token)*
+- *authorise(token, [options])*
 
         Authorises user with Last.fm api. See last.fm documentation.
+        `options` can include listeners for `authorised` and `error` events.
+        Options:
+         - *authorised*
+            function(session)
+        Listener for `authorised` event. See below.
 
-- *addListener(event, handler)*
+         - *error*
+           function(error)
+        Listener for `error` event. See below.
+
+- *on(event, handler)*
 
         Adds a listener for the specified event.
 
