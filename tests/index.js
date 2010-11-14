@@ -5,3 +5,4 @@ require("./lastfm-session-test.js");
 require("./lastfm-response-reader-test.js");
 require("./lastfm-info-test.js");
 require("./lastfm-info-track-test.js");
+require("./lastfm-update-test.js");
