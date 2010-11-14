@@ -147,8 +147,11 @@ Public properties:
         Valid types: `"user"`
 
 Options:
+        Additioanl request parameters. See lastfm API for details.
+        - *success* : `function(info)`
+        - *error* : `function(error)`
+        Event handlers
 
-        Request parameters. See lastfm API for details.
 
 ## Example
 

@@ -6,6 +6,14 @@ describe("a new info instance")
     this.lastfm = new LastFmNode();
     this.gently = new Gently();
   });
+
+  it("accepts listeners in options", function() {
+    var handlers = { error: function() {}, success: function() {} };
+    this.gently.expect(handlers, "error");
+    this.gently.expect(handlers, "success");
+    var info = new LastFmInfo(this.lastfm, "", handlers);
+    info.emit("success");
+  });
   
   it("emits error for unknown info type", function() {
     var handler = { error: function() {}};

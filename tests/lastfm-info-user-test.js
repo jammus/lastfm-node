@@ -9,7 +9,7 @@ var basicSetup = function() {
   this.defaultOptions = {
     error: function(e) {
       that.error = e;
-    }
+    },
     success: function(obj) {
       that.object = obj;
     }
