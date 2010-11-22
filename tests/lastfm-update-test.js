@@ -89,6 +89,16 @@ describe("nowPlaying updates")
     });
   });
 
+  it("sends duration when supplied", function() {
+    this.gently.expect(this.lastfm, "writeRequest", function(params) {
+      assert.equal(232000, params.duration);
+    });
+    new LastFmUpdate(this.lastfm, "nowplaying", this.authorisedSession, {
+      track: FakeTracks.RunToYourGrave,
+      duration: 232000
+    });
+  });
+
 describe("a scrobble request")
   before(function() {
     setupFixture(this);
