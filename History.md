@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+* Added slightly more descriptive errors to RecentTracksParser.
+
 ## 0.4.0
 
 ### Breaking changes

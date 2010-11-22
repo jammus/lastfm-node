@@ -18,6 +18,7 @@ describe("parser")
   it("emits error when no recenttracks object", function() {
     this.gently.expect(this.parser, "emit", function(event, error) {
       assert.equal("error", event);
+      assert.ok(error.message.indexOf(FakeData.UnknownObject) > -1);
     });
     this.parser.parse(FakeData.UnknownObject);
   })
@@ -37,3 +38,11 @@ describe("parser")
     });
     this.parser.parse(FakeData.MultipleRecentsTracks);
   })
+
+  it("emits error containing received data when garbage", function() {
+    this.gently.expect(this.parser, "emit", function(event, error) {
+      assert.equal("error", event);
+      assert.ok(error.message.indexOf(FakeData.Garbage) > -1);
+    });
+    this.parser.parse(FakeData.Garbage);
+  });
