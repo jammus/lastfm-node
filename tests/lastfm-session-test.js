@@ -33,10 +33,19 @@ it("has no user", function() {
   assert.ok(!this.session.user);
 });
 
+it("is not authorised", function() {
+  assert.ok(!this.session.isAuthorised());
+});
+
 it("can configure key and user", function() {
   var session = new LastFmSession(new LastFmNode(), "user", "sessionkey");
   assert.equal("user", session.user);
   assert.equal("sessionkey", session.key);
+});
+
+it("is authorised when it has a key", function() {
+  var session = new LastFmSession(new LastFmNode(), "user", "sessionkey");
+  assert.ok(session.isAuthorised());
 });
 
 describe("a LastFmSession authorisation request")
@@ -110,6 +119,7 @@ it("updates session key and user when successful", function() {
   this.gently.expect(this.session, "emit", function(event, session) {
     assert.equal("username", session.user);
     assert.equal("sessionkey", session.key);
+    assert.ok(session.isAuthorised());
   });
   this.session.authorise("token");
 });

@@ -1,5 +1,9 @@
 # Changelog
 
+## Future Release
+
+* Added session.isAuthorised()
+
 ## 0.4.1
 
 * Added slightly more descriptive errors to RecentTracksParser.

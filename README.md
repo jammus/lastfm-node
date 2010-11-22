@@ -111,6 +111,10 @@ Methods:
 
         Removes the listener for the specified event.
 
+- *isAuthorised()*
+
+        Returns true if the session has been authorised or a key was specified in the constructor.
+
 Events:
 
 - *authorised(session)*
