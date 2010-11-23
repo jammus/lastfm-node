@@ -1,6 +1,6 @@
 # Changelog
 
-## Future Release
+## 0.4.2
 
 * Added session.isAuthorised()
 
