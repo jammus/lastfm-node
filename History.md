@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.3
+
+* Fixed bug where RecentTrackStream was working with null tracks.
+
 ## 0.4.2
 
 * Added session.isAuthorised()
