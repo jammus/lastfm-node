@@ -23,6 +23,14 @@ describe("parser")
     this.parser.parse(FakeData.UnknownObject);
   })
 
+  it("emits error when no recenttracks.track object", function() {
+    this.gently.expect(this.parser, "emit", function(event, error) {
+      assert.equal("error", event);
+      assert.ok(error.message.indexOf(FakeData.UnexpectedRecentTracks) > -1);
+    });
+    this.parser.parse(FakeData.UnexpectedRecentTracks);
+  });
+
   it("emits track for value of recenttracks.track", function() {
     this.gently.expect(this.parser, "emit", function(event, track) {
       assert.equal("track", event);
