@@ -91,6 +91,18 @@ describe("when receiving data")
     });
   });
 
+  it("emits error if receiving junk", function() {
+      this.gently.expect(this.lastfm, "readRequest", function(params, signed, callback) {
+        callback(FakeData.Garbage);
+      });
+      new LastFmInfo(this.lastfm, "track", {
+        error: this.gently.expect(function errorHandler(error) {
+          assert.ok(error.message.indexOf(FakeData.Garbage) > -1);
+          assert.ok("Syntax error");
+        })
+      });
+  });
+
   it("emits success with received data when matches expected type", function() {
     this.gently.expect(this.lastfm, "readRequest", function(params, signed, callback) {
       callback(FakeData.RunToYourGraveTrackInfo);

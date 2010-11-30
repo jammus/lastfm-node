@@ -1,5 +1,9 @@
 # Changelog
 
+## Next version
+
+* Fixed bug where unexpected data in LastFmInfo would crash application.
+
 ## 0.4.3
 
 * Fixed bug where RecentTrackStream was working with null tracks.
