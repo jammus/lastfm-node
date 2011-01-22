@@ -7,7 +7,7 @@ function setupFixture(context) {
   context.lastfm = new LastFmNode();
   context.authorisedSession = new LastFmSession(context.lastfm, "user", "key");
   context.whenWriteRequestReturns = function(returndata) {
-    context.gently.expect(context.lastfm, "writeRequest", function(params, signed, callback) {
+    context.gently.expect(context.lastfm, "write", function(params, signed, callback) {
       callback(returndata);
     });
   };
@@ -38,7 +38,7 @@ describe("update requests")
   });
 
   it("sends a signed request", function() {
-    this.gently.expect(this.lastfm, "writeRequest", function(params, signed) {
+    this.gently.expect(this.lastfm, "write", function(params, signed) {
       assert.ok(signed);
     });
     new LastFmUpdate(this.lastfm, "nowplaying", this.authorisedSession, { track: FakeTracks.RunToYourGrave });
@@ -60,7 +60,7 @@ describe("nowPlaying updates")
   });
 
   it("uses updateNowPlaying method", function() {
-    this.gently.expect(this.lastfm, "writeRequest", function(params) {
+    this.gently.expect(this.lastfm, "write", function(params) {
       assert.equal("track.updateNowPlaying", params.method);
     });
     new LastFmUpdate(this.lastfm, "nowplaying", this.authorisedSession, {
@@ -69,7 +69,7 @@ describe("nowPlaying updates")
   });
   
   it("sends required parameters", function() {
-    this.gently.expect(this.lastfm, "writeRequest", function(params) {
+    this.gently.expect(this.lastfm, "write", function(params) {
       assert.equal("The Mae Shi", params.artist);
       assert.equal("Run To Your Grave", params.track);
       assert.equal("key", params.sk);
@@ -90,7 +90,7 @@ describe("nowPlaying updates")
   });
 
   it("sends duration when supplied", function() {
-    this.gently.expect(this.lastfm, "writeRequest", function(params) {
+    this.gently.expect(this.lastfm, "write", function(params) {
       assert.equal(232000, params.duration);
     });
     new LastFmUpdate(this.lastfm, "nowplaying", this.authorisedSession, {
@@ -114,7 +114,7 @@ describe("a scrobble request")
   });
   
   it("uses scrobble method", function() {
-    this.gently.expect(this.lastfm, "writeRequest", function(params) {
+    this.gently.expect(this.lastfm, "write", function(params) {
       assert.equal("track.scrobble", params.method);
     });
     new LastFmUpdate(this.lastfm, "scrobble", this.authorisedSession, {
@@ -124,7 +124,7 @@ describe("a scrobble request")
   });
 
   it("sends required parameters", function() {
-    this.gently.expect(this.lastfm, "writeRequest", function(params) {
+    this.gently.expect(this.lastfm, "write", function(params) {
       assert.equal("The Mae Shi", params.artist);
       assert.equal("Run To Your Grave", params.track);
       assert.equal("key", params.sk);

@@ -8,14 +8,14 @@ describe("a track info request")
   });
 
   it("calls method track.getInfo", function() {
-    this.gently.expect(this.lastfm, "readRequest", function(params, signed) {
+    this.gently.expect(this.lastfm, "read", function(params, signed) {
       assert.equal("track.getinfo", params.method);
     });
     new LastFmInfo(this.lastfm, "track", { mbid: "mbid" });
   });
 
   it("can accept artist, track name and mbid", function() {
-    this.gently.expect(this.lastfm, "readRequest", function(params) {
+    this.gently.expect(this.lastfm, "read", function(params) {
       assert.equal("The Mae Shi", params.artist);
       assert.equal("Run To Your Grave", params.track);
       assert.equal("1234567890", params.mbid);
@@ -28,7 +28,7 @@ describe("a track info request")
   });
 
   it("can accept basic track object", function() {
-    this.gently.expect(this.lastfm, "readRequest", function(params) {
+    this.gently.expect(this.lastfm, "read", function(params) {
       assert.equal("The Mae Shi", params.artist);
       assert.equal("Run To Your Grave", params.track);
       assert.equal("fakembid", params.mbid);

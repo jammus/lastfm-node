@@ -180,7 +180,7 @@ describe("Streaming")
   });
 
   it("starts and stops streaming when requested", function() {
-    this.gently.expect(this.lastfm, "readRequest", 1, function(params, signed, callback) {
+    this.gently.expect(this.lastfm, "read", 1, function(params, signed, callback) {
     });
     var trackStream = new RecentTracksStream(this.lastfm);
     trackStream.start();
@@ -189,7 +189,7 @@ describe("Streaming")
   });
 
   it("starts automatically when autostart set to true", function() {
-    this.gently.expect(this.lastfm, "readRequest", function() {});
+    this.gently.expect(this.lastfm, "read", function() {});
     var trackStream = new RecentTracksStream(this.lastfm, "username", { autostart: true} );
     assert.ok(trackStream.isStreaming);
     trackStream.stop();

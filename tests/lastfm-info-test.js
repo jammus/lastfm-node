@@ -24,31 +24,31 @@ describe("a new info instance")
   });
   
   it("allows requests for user info", function() {
-    this.gently.expect(this.lastfm, "readRequest");
+    this.gently.expect(this.lastfm, "read");
     var info = new LastFmInfo(this.lastfm, "user");
   });
 
   it("allows requests for track info", function() {
-    this.gently.expect(this.lastfm, "readRequest");
+    this.gently.expect(this.lastfm, "read");
     var info = new LastFmInfo(this.lastfm, "track");
   });
 
   it("allows all [itemtype].getinfo calls", function() {
-    this.gently.expect(this.lastfm, "readRequest", function(params) {
+    this.gently.expect(this.lastfm, "read", function(params) {
       assert.equal("event.getinfo", params.method);
     });
     new LastFmInfo(this.lastfm, "event");
   });
   
   it("calls unsigned methods", function() {
-    this.gently.expect(this.lastfm, "readRequest", function(params, signed) {
+    this.gently.expect(this.lastfm, "read", function(params, signed) {
       assert.equal(false, signed);
     });
     var info = new LastFmInfo(this.lastfm, "user");
   });
 
   it("passes through parameters", function() {
-    this.gently.expect(this.lastfm, "readRequest", function(params) {
+    this.gently.expect(this.lastfm, "read", function(params) {
       assert.equal("username", params.user);
       assert.equal("anything", params.arbitrary);
     });
@@ -56,7 +56,7 @@ describe("a new info instance")
   });
 
   it("doesnt pass through callback parameters", function() {
-    this.gently.expect(this.lastfm, "readRequest", function(params) {
+    this.gently.expect(this.lastfm, "read", function(params) {
       assert.ok(!params.error);
       assert.ok(!params.success);
     });
@@ -70,7 +70,7 @@ describe("when receiving data")
   });
 
   it("emits error if response contains error", function() {
-    this.gently.expect(this.lastfm, "readRequest", function(params, signed, callback) {
+    this.gently.expect(this.lastfm, "read", function(params, signed, callback) {
       callback(FakeData.NotEnoughTrackInfo);
     });
     new LastFmInfo(this.lastfm, "track", {
@@ -81,7 +81,7 @@ describe("when receiving data")
   });
 
   it("emits error when receiving unexpected data", function() {
-    this.gently.expect(this.lastfm, "readRequest", function(params, signed, callback) {
+    this.gently.expect(this.lastfm, "read", function(params, signed, callback) {
       callback(FakeData.SuccessfulAuthorisation);
     });
     new LastFmInfo(this.lastfm, "track", {
@@ -92,7 +92,7 @@ describe("when receiving data")
   });
 
   it("emits error if receiving junk", function() {
-      this.gently.expect(this.lastfm, "readRequest", function(params, signed, callback) {
+      this.gently.expect(this.lastfm, "read", function(params, signed, callback) {
         callback(FakeData.Garbage);
       });
       new LastFmInfo(this.lastfm, "track", {
@@ -104,7 +104,7 @@ describe("when receiving data")
   });
 
   it("emits success with received data when matches expected type", function() {
-    this.gently.expect(this.lastfm, "readRequest", function(params, signed, callback) {
+    this.gently.expect(this.lastfm, "read", function(params, signed, callback) {
       callback(FakeData.RunToYourGraveTrackInfo);
     });
     new LastFmInfo(this.lastfm, "track", {

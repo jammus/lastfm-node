@@ -1,5 +1,9 @@
 # Changelog
 
+## Next version
+
+* Renamed lastfm.readRequest/writeRequest to read/write.
+
 ## 0.4.4
 
 * Handles response errors (timeouts, etc) when communicating with Last.fm

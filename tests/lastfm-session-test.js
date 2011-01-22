@@ -12,7 +12,7 @@ function setupFixture(context) {
   };
 
   context.whenReadRequestReturns = function(returndata) {
-    context.gently.expect(context.lastfm, "readRequest", function(params, signed, callback) {
+    context.gently.expect(context.lastfm, "read", function(params, signed, callback) {
       callback(returndata);
     });
   };
@@ -59,21 +59,21 @@ it("emits error when no token supplied", function() {
 });
 
 it("contains supplied token", function() {
-  this.gently.expect(this.lastfm, "readRequest", function(params) {
+  this.gently.expect(this.lastfm, "read", function(params) {
     assert.equal("token", params.token);
   });
   this.session.authorise("token");
 });
 
 it("uses getSession method", function() {
-  this.gently.expect(this.lastfm, "readRequest", function(params) {
+  this.gently.expect(this.lastfm, "read", function(params) {
     assert.equal("auth.getsession", params.method);
   });
   this.session.authorise("token");
 });
 
 it("is signed", function() {
-  this.gently.expect(this.lastfm, "readRequest", function(params, signed) {
+  this.gently.expect(this.lastfm, "read", function(params, signed) {
     assert.ok(signed);
   });
   this.session.authorise("token");
