@@ -3,6 +3,7 @@
 ## Next version
 
 * Renamed lastfm.readRequest/writeRequest to read/write.
+* Replace response reader with LastFmRequest.
 
 ## 0.4.4
 
