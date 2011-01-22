@@ -1,7 +1,8 @@
 # Changelog
 
-## Next version
+## 0.4.4
 
+* Handles response errors (timeouts, etc) when communicating with Last.fm
 * Fixed bug where unexpected data in LastFmInfo would crash application.
 
 ## 0.4.3
