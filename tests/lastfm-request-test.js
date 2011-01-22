@@ -1,5 +1,5 @@
 require("./common");
-var LastFmRequest = require("../lib/lastfm-node/lastfm-request").LastFmRequest;
+var LastFmRequest = require("../lib/lastfm-node/lastfm-request");
 var fakes = require("./fakes");
 
 (function() {

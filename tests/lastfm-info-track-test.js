@@ -1,5 +1,6 @@
 require("./common.js");
-var LastFmInfo = require("lastfm/lastfm-info").LastFmInfo;
+var LastFmInfo = require("lastfm/lastfm-info");
+var fakes = require("./fakes");
 
 describe("a track info request")
   before(function() {
@@ -10,6 +11,7 @@ describe("a track info request")
   it("calls method track.getInfo", function() {
     this.gently.expect(this.lastfm, "read", function(params, signed) {
       assert.equal("track.getinfo", params.method);
+      return new fakes.LastFmRequest();
     });
     new LastFmInfo(this.lastfm, "track", { mbid: "mbid" });
   });
@@ -19,6 +21,7 @@ describe("a track info request")
       assert.equal("The Mae Shi", params.artist);
       assert.equal("Run To Your Grave", params.track);
       assert.equal("1234567890", params.mbid);
+      return new fakes.LastFmRequest();
     });
     new LastFmInfo(this.lastfm, "track", {
       artist: "The Mae Shi",
@@ -32,6 +35,7 @@ describe("a track info request")
       assert.equal("The Mae Shi", params.artist);
       assert.equal("Run To Your Grave", params.track);
       assert.equal("fakembid", params.mbid);
+      return new fakes.LastFmRequest();
     });
     new LastFmInfo(this.lastfm, "track", { track: FakeTracks.RunToYourGrave });
   });

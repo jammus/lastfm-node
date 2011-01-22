@@ -29,3 +29,9 @@ var ClientResponse = exports.ClientResponse = function() {
 };
 
 ClientResponse.prototype = Object.create(EventEmitter.prototype);
+
+var LastFmRequest = exports.LastFmRequest = function() {
+  EventEmitter.call(this);
+};
+
+LastFmRequest.prototype = Object.create(EventEmitter.prototype);
