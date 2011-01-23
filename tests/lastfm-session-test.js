@@ -2,182 +2,187 @@ require('./common.js');
 var LastFmSession = require('lastfm/lastfm-session');
 var fakes = require("./fakes");
 
-function setupFixture(context) {
-  context.errorMessage = "";
-  context.token = "";
-  context.returndata = null;
-  context.options = null;
-  context.request = new fakes.LastFmRequest();
-  context.lastfm = new LastFmNode();
-  context.session = new LastFmSession(context.lastfm);
-  context.expectError = function(errorMessage) {
-    context.gently.expect(context.session, "emit", function(event, error) {
-      assert.equal("error", event);
-      assert.equal(errorMessage, error.message);
-    });
-    context.session.authorise(context.token, context.options);
-    if (context.errorMessage) {
-      context.request.emit("error", new Error(context.errorMessage));
-    }
-    else {
-      context.request.emit("success", context.returndata);
-    }
-  };
+(function() {
+  describe("a new LastFmSession");
+  var session;
 
-  context.expectAuthorisation = function(assertions) {
-    context.gently.expect(context.session, "emit", function(event, session) {
-      assert.equal("authorised", event);
-      if (assertions) {
-        assertions(session);
-      }
-    });
-    context.session.authorise(context.token, context.options);
-    context.request.emit("success", context.returndata);
-  }
-
-  context.whenReadRequestReturns = function(returndata) {
-    context.returndata = returndata;
-    context.gently.expect(context.lastfm, "read", function(params, signed) {
-      return context.request;
-    });
-  };
-
-  context.whenReadRequestThrowsError = function(errorMessage) {
-    context.errorMessage = errorMessage;
-    context.gently.expect(context.lastfm, "read", function(params, signed) {
-      return context.request;
-    });
-  };
-  
-  context.andTokenIs = function(token) {
-    context.token = token;
-  };
-
-  context.andOptionsAre = function(options) {
-    context.options = options;
-  };
-
-  context.gently = new Gently();
-};
-
-describe("a new LastFmSession");
-before(function() {
-   this.session = new LastFmSession(new LastFmNode());
-});
-
-it("has no session key", function() {
-  assert.ok(!this.session.key);
-});
-
-it("has no user", function() {
-  assert.ok(!this.session.user);
-});
-
-it("is not authorised", function() {
-  assert.ok(!this.session.isAuthorised());
-});
-
-it("can configure key and user", function() {
-  var session = new LastFmSession(new LastFmNode(), "user", "sessionkey");
-  assert.equal("user", session.user);
-  assert.equal("sessionkey", session.key);
-});
-
-it("is authorised when it has a key", function() {
-  var session = new LastFmSession(new LastFmNode(), "user", "sessionkey");
-  assert.ok(session.isAuthorised());
-});
-
-describe("a LastFmSession authorisation request")
-before(function() {
-   setupFixture(this);
-});
-
-it("emits error when no token supplied", function() {
-  this.expectError("No token supplied");
-});
-
-it("contains supplied token", function() {
-  var that = this;
-  this.gently.expect(this.lastfm, "read", function(params) {
-    assert.equal("token", params.token);
-    return that.request;
+  before(function() {
+     session = new LastFmSession(new LastFmNode());
   });
-  this.session.authorise("token");
-});
 
-it("uses getSession method", function() {
-  var that = this;
-  this.gently.expect(this.lastfm, "read", function(params) {
-    assert.equal("auth.getsession", params.method);
-    return that.request;
+  it("has no session key", function() {
+    assert.ok(!session.key);
   });
-  this.session.authorise("token");
-});
 
-it("is signed", function() {
-  var that = this;
-  this.gently.expect(this.lastfm, "read", function(params, signed) {
-    assert.ok(signed);
-    return that.request;
+  it("has no user", function() {
+    assert.ok(!session.user);
   });
-  this.session.authorise("token");
-});
 
-describe("a completed LastFmSession authorisation request")
-before(function() {
-   setupFixture(this);
-});
-
-it("emits error when authorisation not successful", function() {
-  this.whenReadRequestReturns(FakeData.AuthorisationError);
-  this.andTokenIs("token");
-  this.expectError("Signature is invalid");
-});
-
-it("emits error when receiving unexpected return data", function() {
-  this.whenReadRequestReturns(FakeData.SingleRecentTrack);
-  this.andTokenIs("token");
-  this.expectError("Unexpected error");
-});
-
-it("emits authorised when successful", function() {
-  this.whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
-  this.andTokenIs("token");
-  this.expectAuthorisation();
-});
-
-it("can have error handler specified with authorise call", function() {
-  var handler = { error: function(error) { } };
-  this.gently.expect(handler, "error", function(error) {
-    assert.equal("No token supplied", error.message); 
+  it("is not authorised", function() {
+    assert.ok(!session.isAuthorised());
   });
-  this.session.authorise("", {
-    error: handler.error
-  });
-});
 
-it("updates session key and user when successful", function() {
-  this.whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
-  this.andTokenIs("token");
-  this.expectAuthorisation(function(session) {
-    assert.equal("username", session.user);
+  it("can configure key and user", function() {
+    var session = new LastFmSession(new LastFmNode(), "user", "sessionkey");
+    assert.equal("user", session.user);
     assert.equal("sessionkey", session.key);
+  });
+
+  it("is authorised when it has a key", function() {
+    var session = new LastFmSession(new LastFmNode(), "user", "sessionkey");
     assert.ok(session.isAuthorised());
   });
-});
+})();
 
-it("can have authorised handler specified with authorise call", function() {
-  var handler = { authorised: function(session) { } };
-  this.whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
-  this.session.authorise("token", {
-    authorised: handler.authorised
+(function() {
+  var readError, token, returndata, options, request, lastfm, session, gently;
+
+  function setupFixture() {
+    readError = "";
+    token = "";
+    returndata = null;
+    options = null;
+    request = new fakes.LastFmRequest();
+    lastfm = new LastFmNode();
+    session = new LastFmSession(lastfm);
+    gently = new Gently();
+  }
+
+  function expectError(expectedError) {
+    gently.expect(session, "emit", function(event, error) {
+      assert.equal("error", event);
+      assert.equal(expectedError, error.message);
+    });
+    session.authorise(token, options);
+    if (readError) {
+      request.emit("error", new Error(readError));
+    }
+    else {
+      request.emit("success", returndata);
+    }
+  }
+
+  function expectAuthorisation(assertions) {
+    gently.expect(session, "emit", function(event, emittedSession) {
+      assert.equal("authorised", event);
+      if (assertions) {
+        assertions(emittedSession);
+      }
+    });
+    session.authorise(token, options);
+    request.emit("success", returndata);
+  }
+
+  function whenReadRequestReturns(data) {
+    returndata = data;
+    gently.expect(lastfm, "read", function(params, signed) {
+      return request;
+    });
+  }
+
+  function whenReadRequestThrowsError(message) {
+    readError = message;
+    gently.expect(lastfm, "read", function(params, signed) {
+      return request;
+    });
+  }
+  
+  function andTokenIs(setToken) {
+    token = setToken;
+  }
+
+  function andOptionsAre(setOptions) {
+    options = setOptions;
+  }
+
+  describe("a LastFmSession authorisation request")
+  before(function() {
+     setupFixture();
   });
-});
-
-it("bubbles up errors", function() {
-  var errorMessage = "Bubbled error";
-  this.whenReadRequestThrowsError(errorMessage);
-  this.andTokenIs("token");
-  this.expectError(errorMessage);
-});
+  
+  it("emits error when no token supplied", function() {
+    expectError("No token supplied");
+  });
+  
+  it("contains supplied token", function() {
+    gently.expect(lastfm, "read", function(params) {
+      assert.equal("token", params.token);
+      return request;
+    });
+    session.authorise("token");
+  });
+  
+  it("uses getSession method", function() {
+    gently.expect(lastfm, "read", function(params) {
+      assert.equal("auth.getsession", params.method);
+      return request;
+    });
+    session.authorise("token");
+  });
+  
+  it("is signed", function() {
+    gently.expect(lastfm, "read", function(params, signed) {
+      assert.ok(signed);
+      return request;
+    });
+    session.authorise("token");
+  });
+  
+  describe("a completed LastFmSession authorisation request")
+  before(function() {
+     setupFixture();
+  });
+  
+  it("emits error when authorisation not successful", function() {
+    whenReadRequestReturns(FakeData.AuthorisationError);
+    andTokenIs("token");
+    expectError("Signature is invalid");
+  });
+  
+  it("emits error when receiving unexpected return data", function() {
+    whenReadRequestReturns(FakeData.SingleRecentTrack);
+    andTokenIs("token");
+    expectError("Unexpected error");
+  });
+  
+  it("emits authorised when successful", function() {
+    whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
+    andTokenIs("token");
+    expectAuthorisation();
+  });
+  
+  it("can have error handler specified with authorise call", function() {
+    var handler = { error: function(error) { } };
+    gently.expect(handler, "error", function(error) {
+      assert.equal("No token supplied", error.message); 
+    });
+    session.authorise("", {
+      error: handler.error
+    });
+  });
+  
+  it("updates session key and user when successful", function() {
+    whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
+    andTokenIs("token");
+    expectAuthorisation(function(session) {
+      assert.equal("username", session.user);
+      assert.equal("sessionkey", session.key);
+      assert.ok(session.isAuthorised());
+    });
+  });
+  
+  it("can have authorised handler specified with authorise call", function() {
+    var handler = { authorised: function(session) { } };
+    whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
+    session.authorise("token", {
+      authorised: handler.authorised
+    });
+  });
+  
+  it("bubbles up errors", function() {
+    var errorMessage = "Bubbled error";
+    whenReadRequestThrowsError(errorMessage);
+    andTokenIs("token");
+    expectError(errorMessage);
+  });
+})();
