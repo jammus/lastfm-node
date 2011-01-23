@@ -1,5 +1,5 @@
 require('./common.js');
-var LastFmSession = require('lastfm/lastfm-session').LastFmSession;
+var LastFmSession = require('lastfm/lastfm-session');
 var LastFmUpdate = require('lastfm/lastfm-update').LastFmUpdate;
 
 function setupFixture(context) {

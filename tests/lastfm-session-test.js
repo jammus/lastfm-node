@@ -1,7 +1,13 @@
 require('./common.js');
-var LastFmSession = require('lastfm/lastfm-session').LastFmSession;
+var LastFmSession = require('lastfm/lastfm-session');
+var fakes = require("./fakes");
 
 function setupFixture(context) {
+  context.errorMessage = "";
+  context.token = "";
+  context.returndata = null;
+  context.options = null;
+  context.request = new fakes.LastFmRequest();
   context.lastfm = new LastFmNode();
   context.session = new LastFmSession(context.lastfm);
   context.expectError = function(errorMessage) {
@@ -9,12 +15,46 @@ function setupFixture(context) {
       assert.equal("error", event);
       assert.equal(errorMessage, error.message);
     });
+    context.session.authorise(context.token, context.options);
+    if (context.errorMessage) {
+      context.request.emit("error", new Error(context.errorMessage));
+    }
+    else {
+      context.request.emit("success", context.returndata);
+    }
   };
 
-  context.whenReadRequestReturns = function(returndata) {
-    context.gently.expect(context.lastfm, "read", function(params, signed, callback) {
-      callback(returndata);
+  context.expectAuthorisation = function(assertions) {
+    context.gently.expect(context.session, "emit", function(event, session) {
+      assert.equal("authorised", event);
+      if (assertions) {
+        assertions(session);
+      }
     });
+    context.session.authorise(context.token, context.options);
+    context.request.emit("success", context.returndata);
+  }
+
+  context.whenReadRequestReturns = function(returndata) {
+    context.returndata = returndata;
+    context.gently.expect(context.lastfm, "read", function(params, signed) {
+      return context.request;
+    });
+  };
+
+  context.whenReadRequestThrowsError = function(errorMessage) {
+    context.errorMessage = errorMessage;
+    context.gently.expect(context.lastfm, "read", function(params, signed) {
+      return context.request;
+    });
+  };
+  
+  context.andTokenIs = function(token) {
+    context.token = token;
+  };
+
+  context.andOptionsAre = function(options) {
+    context.options = options;
   };
 
   context.gently = new Gently();
@@ -55,26 +95,31 @@ before(function() {
 
 it("emits error when no token supplied", function() {
   this.expectError("No token supplied");
-  this.session.authorise(); 
 });
 
 it("contains supplied token", function() {
+  var that = this;
   this.gently.expect(this.lastfm, "read", function(params) {
     assert.equal("token", params.token);
+    return that.request;
   });
   this.session.authorise("token");
 });
 
 it("uses getSession method", function() {
+  var that = this;
   this.gently.expect(this.lastfm, "read", function(params) {
     assert.equal("auth.getsession", params.method);
+    return that.request;
   });
   this.session.authorise("token");
 });
 
 it("is signed", function() {
+  var that = this;
   this.gently.expect(this.lastfm, "read", function(params, signed) {
     assert.ok(signed);
+    return that.request;
   });
   this.session.authorise("token");
 });
@@ -86,22 +131,20 @@ before(function() {
 
 it("emits error when authorisation not successful", function() {
   this.whenReadRequestReturns(FakeData.AuthorisationError);
+  this.andTokenIs("token");
   this.expectError("Signature is invalid");
-  this.session.authorise("token");
 });
 
 it("emits error when receiving unexpected return data", function() {
   this.whenReadRequestReturns(FakeData.SingleRecentTrack);
+  this.andTokenIs("token");
   this.expectError("Unexpected error");
-  this.session.authorise("token");
 });
 
 it("emits authorised when successful", function() {
   this.whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
-  this.gently.expect(this.session, "emit", function(event) {
-    assert.equal("authorised", event);
-  });
-  this.session.authorise("token");
+  this.andTokenIs("token");
+  this.expectAuthorisation();
 });
 
 it("can have error handler specified with authorise call", function() {
@@ -116,22 +159,25 @@ it("can have error handler specified with authorise call", function() {
 
 it("updates session key and user when successful", function() {
   this.whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
-  this.gently.expect(this.session, "emit", function(event, session) {
+  this.andTokenIs("token");
+  this.expectAuthorisation(function(session) {
     assert.equal("username", session.user);
     assert.equal("sessionkey", session.key);
     assert.ok(session.isAuthorised());
   });
-  this.session.authorise("token");
 });
 
 it("can have authorised handler specified with authorise call", function() {
   var handler = { authorised: function(session) { } };
   this.whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
-  this.gently.expect(handler, "authorised", function(session) {
-    assert.equal("username", session.user);
-    assert.equal("sessionkey", session.key);
-  });
   this.session.authorise("token", {
     authorised: handler.authorised
   });
+});
+
+it("bubbles up errors", function() {
+  var errorMessage = "Bubbled error";
+  this.whenReadRequestThrowsError(errorMessage);
+  this.andTokenIs("token");
+  this.expectError(errorMessage);
 });
