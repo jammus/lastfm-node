@@ -1,56 +1,61 @@
 require("./common.js");
 
-var RecentTracksParser = require("lastfm/recenttracks-parser").RecentTracksParser;
+var RecentTracksParser = require("lastfm/recenttracks-parser");
 
-describe("parser")
+(function() {
+  var parser, gently;
+
+  describe("parser")
+
   before(function() { 
-    this.parser = new RecentTracksParser();
-    this.gently = new Gently();
+    parser = new RecentTracksParser();
+    gently = new Gently();
   })
 
   it("emits error when empty", function() {
-    this.gently.expect(this.parser, "emit", function(event, error) {
+    gently.expect(parser, "emit", function(event, error) {
       assert.equal("error", event);
     });
-    this.parser.parse('');
+    parser.parse('');
   })
 
   it("emits error when no recenttracks object", function() {
-    this.gently.expect(this.parser, "emit", function(event, error) {
+    gently.expect(parser, "emit", function(event, error) {
       assert.equal("error", event);
       assert.ok(error.message.indexOf(FakeData.UnknownObject) > -1);
     });
-    this.parser.parse(FakeData.UnknownObject);
+    parser.parse(FakeData.UnknownObject);
   })
 
   it("emits error when no recenttracks.track object", function() {
-    this.gently.expect(this.parser, "emit", function(event, error) {
+    gently.expect(parser, "emit", function(event, error) {
       assert.equal("error", event);
       assert.ok(error.message.indexOf(FakeData.UnexpectedRecentTracks) > -1);
     });
-    this.parser.parse(FakeData.UnexpectedRecentTracks);
+    parser.parse(FakeData.UnexpectedRecentTracks);
   });
 
   it("emits track for value of recenttracks.track", function() {
-    this.gently.expect(this.parser, "emit", function(event, track) {
+    gently.expect(parser, "emit", function(event, track) {
       assert.equal("track", event);
       assert.equal(42, track);
     });
-    this.parser.parse(FakeData.SingleRecentTrack);
+    parser.parse(FakeData.SingleRecentTrack);
   })
 
   it("returns multiple track when array", function() {
-    this.gently.expect(this.parser, "emit", function(event, tracks) {
+    gently.expect(parser, "emit", function(event, tracks) {
       assert.equal("first", tracks[0]);
       assert.equal("second", tracks[1]);
     });
-    this.parser.parse(FakeData.MultipleRecentsTracks);
+    parser.parse(FakeData.MultipleRecentsTracks);
   })
 
   it("emits error containing received data when garbage", function() {
-    this.gently.expect(this.parser, "emit", function(event, error) {
+    gently.expect(parser, "emit", function(event, error) {
       assert.equal("error", event);
       assert.ok(error.message.indexOf(FakeData.Garbage) > -1);
     });
-    this.parser.parse(FakeData.Garbage);
+    parser.parse(FakeData.Garbage);
   });
+})();
