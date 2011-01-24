@@ -2,6 +2,7 @@ require("./common.js");
 
 var RecentTracksParser = require("lastfm/recenttracks-parser");
 var RecentTracksStream = require("lastfm/recenttracks-stream");
+var fakes = require("./fakes");
 
 (function() {
   var gently, lastfm, trackStream;
@@ -184,17 +185,19 @@ var RecentTracksStream = require("lastfm/recenttracks-stream");
 })();
 
 (function() {
-  var lastfm, gently;
+  var lastfm, gently, request;
 
   describe("Streaming")
 
   before(function() { 
     lastfm = new LastFmNode();
     gently = new Gently();
+    request = new fakes.LastFmRequest();
   });
 
   it("starts and stops streaming when requested", function() {
     gently.expect(lastfm, "read", 1, function(params, signed, callback) {
+      return request;
     });
     var trackStream = new RecentTracksStream(lastfm);
     trackStream.start();
@@ -203,9 +206,24 @@ var RecentTracksStream = require("lastfm/recenttracks-stream");
   });
 
   it("starts automatically when autostart set to true", function() {
-    gently.expect(lastfm, "read", function() {});
+    gently.expect(lastfm, "read", function() {
+      return request;
+    });
     var trackStream = new RecentTracksStream(lastfm, "username", { autostart: true} );
     assert.ok(trackStream.isStreaming);
+    trackStream.stop();
+  });
+
+  it("bubbles up errors", function() {
+    var errorMessage = "Bubbled error";
+    gently.expect(lastfm, "read", function() {
+      return request;
+    });
+    var trackStream = new RecentTracksStream(lastfm, "username", { autostart:true });
+    gently.expect(trackStream, "emit", function(event, error) {
+      assert.equal(errorMessage, error.message);
+    });
+    request.emit("error", new Error(errorMessage));
     trackStream.stop();
   });
 })();
