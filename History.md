@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5
+## 0.5.0
 
 * Renamed lastfm.readRequest/writeRequest to read/write.
 * Replace response reader with LastFmRequest.

@@ -1,7 +1,7 @@
 {
   "name": "lastfm",
   "description": "Read and write to Last.fm",
-  "version": "0.5",
+  "version": "0.5.0",
   "author": "James Scott <jammus@gmail.com>",
   "repository": {
     "type": "git",
