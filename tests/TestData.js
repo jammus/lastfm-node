@@ -27,6 +27,8 @@ FakeData.UserInfo = "{\"user\":{\"name\":\"jammus\",\"realname\":\"James\",\"ima
 
 FakeData.UnknownUser = "{\"error\":6,\"message\":\"No user with that name was found\"}";
 
+FakeData.Error = "{\"error\":1,\"message\":\"Error received\"}";
+
 FakeData.NotEnoughTrackInfo = "{\"error\":6,\"message\":\"You must supply either a track & artist name or a track mbid.\"}";
 
 FakeData.RunToYourGraveTrackInfo = "{\"track\":{\"id\":\"87962768\",\"name\":\"Run To Your Grave\",\"mbid\":\"\",\"url\":\"http:\/\/www.last.fm\/music\/The+Mae+Shi\/_\/Run+To+Your+Grave\",\"duration\":\"232000\",\"streamable\":{\"#text\":\"1\",\"fulltrack\":\"0\"},\"listeners\":\"38019\",\"playcount\":\"164628\",\"artist\":{\"name\":\"The Mae Shi\",\"mbid\":\"8eb5c47c-4847-4c4b-a041-879d8fc5fbf3\",\"url\":\"http:\/\/www.last.fm\/music\/The+Mae+Shi\"},\"album\":{\"artist\":\"The Mae Shi\",\"title\":\"HILLYH\",\"mbid\":\"\",\"url\":\"http:\/\/www.last.fm\/music\/The+Mae+Shi\/HILLYH\",\"image\":[{\"#text\":\"http:\/\/userserve-ak.last.fm\/serve\/64s\/4656031.jpg\",\"size\":\"small\"},{\"#text\":\"http:\/\/userserve-ak.last.fm\/serve\/126\/4656031.jpg\",\"size\":\"medium\"},{\"#text\":\"http:\/\/userserve-ak.last.fm\/serve\/174s\/4656031.jpg\",\"size\":\"large\"},{\"#text\":\"http:\/\/userserve-ak.last.fm\/serve\/300x300\/4656031.jpg\",\"size\":\"extralarge\"}],\"@attr\":{\"position\":\"7\"}},\"toptags\":{\"tag\":[{\"name\":\"experimental\",\"url\":\"http:\/\/www.last.fm\/tag\/experimental\"},{\"name\":\"00s\",\"url\":\"http:\/\/www.last.fm\/tag\/00s\"},{\"name\":\"fuck yeah\",\"url\":\"http:\/\/www.last.fm\/tag\/fuck%20yeah\"},{\"name\":\"pop\",\"url\":\"http:\/\/www.last.fm\/tag\/pop\"},{\"name\":\"sing-a-long\",\"url\":\"http:\/\/www.last.fm\/tag\/sing-a-long\"}]}}}";

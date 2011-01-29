@@ -51,6 +51,14 @@ var RecentTracksParser = require("lastfm/recenttracks-parser");
     parser.parse(FakeData.MultipleRecentsTracks);
   })
 
+  it("emits error when response contains error", function() {
+    gently.expect(parser, "emit", function(event, error) {
+      assert.equal("error", event);
+      assert.equal(FakeData.Error.message, error.message);
+    });
+    parser.parse(FakeData.Error);
+  });
+
   it("emits error containing received data when garbage", function() {
     gently.expect(parser, "emit", function(event, error) {
       assert.equal("error", event);
