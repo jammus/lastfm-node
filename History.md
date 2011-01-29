@@ -1,5 +1,9 @@
 # Changelog
 
+## Next release
+
+* More accurate error reporting from RecentTrackParser
+
 ## 0.5.0
 
 * Renamed lastfm.readRequest/writeRequest to read/write.
