@@ -42,23 +42,15 @@ describe("a new info instance")
   });
 
   it("allows all [itemtype].getinfo calls", function() {
-    gently.expect(lastfm, "read", function(params) {
-      assert.equal("event.getinfo", params.method);
+    gently.expect(lastfm, "read", function(method, params) {
+      assert.equal("event.getinfo", method);
       return new fakes.LastFmRequest();
     });
     new LastFmInfo(lastfm, "event");
   });
   
-  it("calls unsigned methods", function() {
-    gently.expect(lastfm, "read", function(params, signed) {
-      assert.equal(false, signed);
-      return new fakes.LastFmRequest();
-    });
-    var info = new LastFmInfo(lastfm, "user");
-  });
-
   it("passes through parameters", function() {
-    gently.expect(lastfm, "read", function(params) {
+    gently.expect(lastfm, "read", function(method, params) {
       assert.equal("username", params.user);
       assert.equal("anything", params.arbitrary);
       return new fakes.LastFmRequest();
@@ -67,7 +59,7 @@ describe("a new info instance")
   });
 
   it("doesnt pass through callback parameters", function() {
-    gently.expect(lastfm, "read", function(params) {
+    gently.expect(lastfm, "read", function(method, params) {
       assert.ok(!params.error);
       assert.ok(!params.success);
       return new fakes.LastFmRequest();
