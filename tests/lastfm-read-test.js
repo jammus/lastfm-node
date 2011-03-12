@@ -1,4 +1,5 @@
 require('./common');
+var crypto = require("crypto");
 var _ = require("underscore");
 var querystring = require("querystring");
 var fakes = require("./fakes");
@@ -22,7 +23,8 @@ var LastFmRequest = fakes.LastFmRequest;
       keys:[]
     }
     lastfm = new LastFmNode({
-      api_key: "key"
+      api_key: "key",
+      secret: "secret"
     });
     client = new fakes.Client();
     gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function(port, host) {
@@ -30,13 +32,22 @@ var LastFmRequest = fakes.LastFmRequest;
       return client;
     });
     gently.expect(client, "request", function(method, url, header) {
-      verifyClientRequest(method, url, header);
-      return new fakes.ClientRequest();
+      var request = new fakes.ClientRequest();
+      if (method == "POST") {
+        gently.expect(request, "write", function(data) {
+          verifyRequest(method, url, header, data);
+        });
+      }
+      else {
+        verifyRequest(method, url, header);
+      }
+      return request;
     });
   });
 
   after(function() {
-    doRequest();
+    var request = doRequest();
+    verifyHandlers(request);
   });
 
   function verifyCreateClient(port, host) {
@@ -48,23 +59,32 @@ var LastFmRequest = fakes.LastFmRequest;
     }
   }
 
-  function verifyClientRequest(method, url, header) {
-    var qs = querystring.parse(url.substr("/2.0?".length));
+  function verifyRequest(method, url, header, data) {
+    if (expectations.url) {
+      assert.equal(expectations.url, url);
+    }
+    var pairs = querystring.parse(data || url.substr("/2.0?".length));
     _(Object.keys(expectations.pairs)).each(function(key) {
-        assert.equal(expectations.pairs[key], qs[key]);
+        assert.equal(expectations.pairs[key], pairs[key]);
     });
-    if (expectations.signed) {
-      assert.ok(qs.api_sig);
+    if (expectations.signed || expectations.signatureHash) {
+      assert.ok(pairs.api_sig);
     }
     else {
-      assert.ok(!qs.api_sig);
+      assert.ok(!pairs.api_sig);
+    }
+    if (expectations.signatureHash) {
+      assert.equal(expectations.signatureHash, pairs.api_sig);
     }
     if (expectations.method) {
       assert.equal(expectations.method, method);
     }
     _(notExpected.keys).each(function(key) {
-      assert.ok(!qs[key]);
+      assert.ok(!pairs[key]);
     });
+    if (expectations.requestData) {
+      assert.ok(data);
+    }
   }
 
   function whenMethodIs(method) {
@@ -87,6 +107,19 @@ var LastFmRequest = fakes.LastFmRequest;
     expectations.signed = true;
   }
 
+  function expectUrl(url) {
+    expectations.url = url;
+  }
+
+  function expectSignatureHashOf(unhashed) {
+    var expectedHash = crypto.createHash("md5").update(unhashed, "utf8").digest("hex");
+    expectSignatureHashToBe(expectedHash);
+  };
+
+    this.expectSignatureHashToBe = function(hash) {
+      expectations.signatureHash = hash;
+    }
+
   function expectRequestOnPort(port) {
     expectations.port = port;
   }
@@ -99,12 +132,19 @@ var LastFmRequest = fakes.LastFmRequest;
     expectations.handlers.push(event);
   }
 
+  function expectRequestData() {
+    expectations.requestData = true;
+  }
+
   function doNotExpectDataKey(key) {
     notExpected.keys.push(key);
   }
 
   function doRequest() {
-    var request = lastfm.read(options.method, options.params);
+    return lastfm.read(options.method, options.params);
+  }
+
+  function verifyHandlers(request) {
     _(expectations.handlers).each(function(event) {
       var listeners = request.listeners(event);
       assert.equal(1, listeners.length, "No handler for event: " + event);
@@ -168,5 +208,89 @@ var LastFmRequest = fakes.LastFmRequest;
     expectHandlerFor("error");
     expectHandlerFor("success");
     expectHandlerFor("arbitrary");
+  });
+
+  it("uses signed param to force signature", function() {
+    whenMethodIs("any.method");
+    andParamsAre({
+      signed: true
+    });
+    expectSignature();
+  });
+
+  it("signature hashes api_key, method and secret", function() {
+    whenMethodIs("auth.getsession");
+    expectSignatureHashOf("api_keykeymethodauth.getsessionsecret");
+  });
+
+  it("signature includes other parameters", function() {
+    whenMethodIs("auth.getsession");
+    andParamsAre({ foo: "bar" });
+    expectSignatureHashOf("api_keykeyfoobarmethodauth.getsessionsecret");
+  });
+
+  it("signature hashes all params alphabetically", function() {
+    whenMethodIs("auth.getsession");
+    andParamsAre({ foo : "bar", baz: "bash", flip : "flop" });
+    expectSignatureHashOf("api_keykeybazbashflipflopfoobarmethodauth.getsessionsecret");
+  });
+
+  it("signature hash ignores format parameter", function() {
+    whenMethodIs("auth.getsession");
+    andParamsAre({ format: "json" });
+    expectSignatureHashOf("api_keykeymethodauth.getsessionsecret");
+  });
+
+  it("signature hash ignores handlers parameter", function() {
+    whenMethodIs("auth.getsession");
+    andParamsAre({ handlers: "handlers" });
+    expectSignatureHashOf("api_keykeymethodauth.getsessionsecret");
+  });
+
+  it("signature hash ignores write parameter", function() {
+    whenMethodIs("auth.getsession");
+    andParamsAre({ write: true });
+    expectSignatureHashOf("api_keykeymethodauth.getsessionsecret");
+  });
+
+  it("signature hash ignores signed parameter", function() {
+    whenMethodIs("any.method");
+    andParamsAre({ signed: true });
+    expectSignatureHashOf("api_keykeymethodany.methodsecret");
+  });
+
+  it("signature hash handles high characters as expected by last.fm (utf8)", function() {
+    whenMethodIs("auth.getsession");
+    andParamsAre({ track: "Tony’s Theme (Remastered)" });
+    expectSignatureHashToBe("15f5159046bf1e76774b9dd46a4ed993");
+  });
+
+  it("write requests use post", function() {
+    whenMethodIs("any.method");
+    andParamsAre({ write: true });
+    expectHttpMethod("POST");
+  });
+
+  it("write requests don't use get parameters", function() {
+    whenMethodIs("any.method");
+    andParamsAre({ write: true });
+    expectUrl("/2.0");
+  });
+
+  it("write requests send data in request", function() {
+    whenMethodIs("any.method");
+    andParamsAre({
+      write: true,
+      foo: "bar"
+    });
+    expectRequestData();
+    expectDataPair("foo", "bar");
+  });
+
+  _(["track.scrobble", "track.nowplaying"]).each(function (method) {
+    it(method + " is a write (post) request", function() {
+      whenMethodIs(method);
+      expectHttpMethod("POST");
+    });
   });
 })();
