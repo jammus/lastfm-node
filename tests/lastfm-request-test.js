@@ -5,26 +5,23 @@ var fakes = require("./fakes");
 (function() {
   describe("a LastFm request")
 
-  var lastfm;
-  var host, connection, url, gently, request;
+  var lastfm, connection, url, gently, request;
 
   before(function() {
     lastfm = new LastFmNode();
-    host = "www.example.com";
-    connection = new fakes.Client(80, host);
-    url = "/resource";
+    connection = new fakes.Client(80, lastfm.host);
     request = new fakes.ClientRequest();
     gently = new Gently();
-    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function(port, host) {
+    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function() {
         return connection;
     });
   });
 
   it("creates a get request", function() {
     gently.expect(connection, "request", function(method, url, options) {
-        assert.equal("GET", method);
-        assert.equal(host, options.host);
-        return request;
+      assert.equal("GET", method);
+      assert.equal(lastfm.host, options.host);
+      return request;
     });
     var lastfmRequest = new LastFmRequest(lastfm, "any.method");
   });
@@ -72,18 +69,15 @@ var fakes = require("./fakes");
 (function() {
   describe("a LastFm request with a body")
 
-  var host, connection, url, gently, request, params;
-  var lastfm;
+  var lastfm, connection, url, gently, request, params;
 
   before(function() {
     lastfm = new LastFmNode();
-    host = "www.example.com";
-    connection = new fakes.Client(80, host);
-    url = "/resource";
+    connection = new fakes.Client(80, lastfm.host);
     request = new fakes.ClientRequest();
     gently = new Gently();
     params = { foo:"bar" };
-    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function(port, host) {
+    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function() {
         return connection;
     });
   });
@@ -92,7 +86,7 @@ var fakes = require("./fakes");
     gently.expect(connection, "request", function(method, url, options) {
       assert.equal("POST", method);
       assert.equal(lastfm.url, url);
-      assert.equal(host, options.host);
+      assert.equal(lastfm.host, options.host);
       return request;
     });
     params.write = true;
