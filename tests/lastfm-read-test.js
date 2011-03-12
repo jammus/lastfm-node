@@ -21,20 +21,34 @@ var LastFmRequest = fakes.LastFmRequest;
     });
     client = new fakes.Client();
     gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function(port, host) {
-      assert.equal(80, port);
-      assert.ok("ws.audioscrobbler.com");
+      if (expectations.port) {
+        assert.equal(expectations.port, port);
+      }
+      if (expectations.host) {
+        assert.equal(expectations.host, host);
+      }
       return client;
     });
     gently.expect(client, "request", function(method, url, headers) {
-      if (expectations.method) assert.equal(expectations.method, method);
+      if (expectations.method) {
+        assert.equal(expectations.method, method);
+      }
       var qs = querystring.parse(url.substr(5));
       _(Object.keys(expectations.pairs)).each(function(key) {
           assert.equal(expectations.pairs[key], qs[key]);
       });
-      if (expectations.signed) assert.ok(qs.api_sig);
-      if (!expectations.signed) assert.ok(!qs.api_sig);
+      if (expectations.signed) {
+        assert.ok(qs.api_sig);
+      }
+      if (!expectations.signed) {
+        assert.ok(!qs.api_sig);
+      }
       return new fakes.ClientRequest();
     });
+  });
+
+  after(function() {
+    verify();
   });
 
   function whenMethodIs(method) {
@@ -57,44 +71,56 @@ var LastFmRequest = fakes.LastFmRequest;
     expectations.signed = true;
   }
 
+  function expectRequestOnPort(port) {
+    expectations.port = port;
+  }
+
+  function expectRequestToHost(host) {
+    expectations.host = host;
+  }
+
   function verify() {
     lastfm.read(options.method, options.params);
   }
 
+  it("default to port 80", function() {
+    whenMethodIs("any.method");
+    expectRequestOnPort(80);
+  });
+
+  it("makes request to audioscrobbler", function() {
+    whenMethodIs("any.method");
+    expectRequestToHost("ws.audioscrobbler.com");
+  });
+
   it("always requests as json", function() {
     whenMethodIs("any.method");
     expectDataPair("format", "json");
-    verify();
   });
 
   it("always passes api_key", function() {
     whenMethodIs("any.method");
     expectDataPair("api_key", "key");
-    verify();
   });
 
   it("defaults to get request", function() {
     whenMethodIs("any.method");
     expectHttpMethod("GET");
-    verify();
   });
 
   it("calls the method specified", function() {
     whenMethodIs("user.getinfo");
     expectDataPair("method", "user.getinfo");
-    verify();
   });
 
   it("passes through parameters", function() {
     whenMethodIs("user.getinfo");
     andParamsAre({ user: "jammus" });
     expectDataPair("user", "jammus");
-    verify();
   });
 
   it("auth.getsession has signature", function() {
     whenMethodIs("auth.getsession");
     expectSignature();
-    verify();
   });
 })();

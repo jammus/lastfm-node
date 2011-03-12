@@ -6,10 +6,6 @@ var crypto = require("crypto");
 describe("default LastFmNode instance")
   before(function() { this.lastfm = new LastFmNode(); })
 
-  it("requests json", function() {
-    assert.equal('json', this.lastfm.params.format);
-  });
-
   it("has default host", function() {
     assert.equal('ws.audioscrobbler.com', this.lastfm.host);
   });
