@@ -21,28 +21,11 @@ var LastFmRequest = fakes.LastFmRequest;
     });
     client = new fakes.Client();
     gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function(port, host) {
-      if (expectations.port) {
-        assert.equal(expectations.port, port);
-      }
-      if (expectations.host) {
-        assert.equal(expectations.host, host);
-      }
+      verifyCreateClient(port, host);
       return client;
     });
-    gently.expect(client, "request", function(method, url, headers) {
-      if (expectations.method) {
-        assert.equal(expectations.method, method);
-      }
-      var qs = querystring.parse(url.substr(5));
-      _(Object.keys(expectations.pairs)).each(function(key) {
-          assert.equal(expectations.pairs[key], qs[key]);
-      });
-      if (expectations.signed) {
-        assert.ok(qs.api_sig);
-      }
-      if (!expectations.signed) {
-        assert.ok(!qs.api_sig);
-      }
+    gently.expect(client, "request", function(method, url, header) {
+      verifyClientRequest(method, url, header);
       return new fakes.ClientRequest();
     });
   });
@@ -50,6 +33,31 @@ var LastFmRequest = fakes.LastFmRequest;
   after(function() {
     verify();
   });
+
+  function verifyCreateClient(port, host) {
+    if (expectations.port) {
+      assert.equal(expectations.port, port);
+    }
+    if (expectations.host) {
+      assert.equal(expectations.host, host);
+    }
+  }
+
+  function verifyClientRequest(method, url, header) {
+    var qs = querystring.parse(url.substr("/2.0?".length));
+    _(Object.keys(expectations.pairs)).each(function(key) {
+        assert.equal(expectations.pairs[key], qs[key]);
+    });
+    if (expectations.signed) {
+      assert.ok(qs.api_sig);
+    }
+    else {
+      assert.ok(!qs.api_sig);
+    }
+    if (expectations.method) {
+      assert.equal(expectations.method, method);
+    }
+  }
 
   function whenMethodIs(method) {
     options.method = method;
