@@ -34,14 +34,14 @@ var fakes = require("./fakes");
 
   function whenWriteRequestReturns(data) {
     returndata = data;
-    gently.expect(lastfm, "write", function(method, params) {
+    gently.expect(lastfm, "request", function(method, params) {
       return request;
     });
   }
 
   function whenWriteRequestThrowsError(errorMessage) {
     requestError = errorMessage;
-    gently.expect(lastfm, "write", function(method, params) {
+    gently.expect(lastfm, "request", function(method, params) {
       return request;
     });
   }
@@ -109,7 +109,7 @@ var fakes = require("./fakes");
     });
   
     it("uses updateNowPlaying method", function() {
-      gently.expect(lastfm, "write", function(method, params) {
+      gently.expect(lastfm, "request", function(method, params) {
         assert.equal("track.updateNowPlaying", method);
         return request;
       });
@@ -119,7 +119,7 @@ var fakes = require("./fakes");
     });
     
     it("sends required parameters", function() {
-      gently.expect(lastfm, "write", function(method, params) {
+      gently.expect(lastfm, "request", function(method, params) {
         assert.equal("The Mae Shi", params.artist);
         assert.equal("Run To Your Grave", params.track);
         assert.equal("key", params.sk);
@@ -143,7 +143,7 @@ var fakes = require("./fakes");
     });
   
     it("sends duration when supplied", function() {
-      gently.expect(lastfm, "write", function(method, params) {
+      gently.expect(lastfm, "request", function(method, params) {
         assert.equal(232000, params.duration);
         return request;
       });
@@ -180,7 +180,7 @@ var fakes = require("./fakes");
     });
     
     it("uses scrobble method", function() {
-      gently.expect(lastfm, "write", function(method, params) {
+      gently.expect(lastfm, "request", function(method, params) {
         assert.equal("track.scrobble", method);
         return request;
       });
@@ -191,7 +191,7 @@ var fakes = require("./fakes");
     });
   
     it("sends required parameters", function() {
-      gently.expect(lastfm, "write", function(method, params) {
+      gently.expect(lastfm, "request", function(method, params) {
         assert.equal("The Mae Shi", params.artist);
         assert.equal("Run To Your Grave", params.track);
         assert.equal("key", params.sk);

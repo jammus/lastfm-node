@@ -10,7 +10,7 @@ var LastFmRequest = fakes.LastFmRequest;
   var options, expectations;
   var notExpected;
 
-  describe("a read request");
+  describe("a lastfm request");
 
   before(function() {
     gently = new Gently();
@@ -141,7 +141,7 @@ var LastFmRequest = fakes.LastFmRequest;
   }
 
   function doRequest() {
-    return lastfm.read(options.method, options.params);
+    return lastfm.request(options.method, options.params);
   }
 
   function verifyHandlers(request) {
