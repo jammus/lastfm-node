@@ -7,6 +7,7 @@ var LastFmRequest = fakes.LastFmRequest;
 (function() {
   var gently, lastfm, client;
   var options, expectations;
+  var notExpected;
 
   describe("a read request");
 
@@ -14,8 +15,12 @@ var LastFmRequest = fakes.LastFmRequest;
     gently = new Gently();
     options = {};
     expectations = {
-      pairs:[]
+      pairs:[],
+      handlers:[]
     };
+    notExpected = {
+      keys:[]
+    }
     lastfm = new LastFmNode({
       api_key: "key"
     });
@@ -31,7 +36,7 @@ var LastFmRequest = fakes.LastFmRequest;
   });
 
   after(function() {
-    verify();
+    doRequest();
   });
 
   function verifyCreateClient(port, host) {
@@ -57,6 +62,9 @@ var LastFmRequest = fakes.LastFmRequest;
     if (expectations.method) {
       assert.equal(expectations.method, method);
     }
+    _(notExpected.keys).each(function(key) {
+      assert.ok(!qs[key]);
+    });
   }
 
   function whenMethodIs(method) {
@@ -87,8 +95,20 @@ var LastFmRequest = fakes.LastFmRequest;
     expectations.host = host;
   }
 
-  function verify() {
-    lastfm.read(options.method, options.params);
+  function expectHandlerFor(event) {
+    expectations.handlers.push(event);
+  }
+
+  function doNotExpectDataKey(key) {
+    notExpected.keys.push(key);
+  }
+
+  function doRequest() {
+    var request = lastfm.read(options.method, options.params);
+    _(expectations.handlers).each(function(event) {
+      var listeners = request.listeners(event);
+      assert.equal(1, listeners.length, "No handler for event: " + event);
+    });
   }
 
   it("default to port 80", function() {
@@ -127,8 +147,26 @@ var LastFmRequest = fakes.LastFmRequest;
     expectDataPair("user", "jammus");
   });
 
+  it("does not pass through event handler parameters", function() {
+    whenMethodIs("any.method");
+    andParamsAre({ handlers: "handlers"});
+    doNotExpectDataKey("handlers");
+  });
+
   it("auth.getsession has signature", function() {
     whenMethodIs("auth.getsession");
     expectSignature();
+  });
+
+  it("attaches handlers to returned request", function() {
+    whenMethodIs("any.method");
+    andParamsAre({ handlers: {
+        error: function() {console.log("errrors");},
+        success: function() {},
+        arbitrary: function() {},
+    }});
+    expectHandlerFor("error");
+    expectHandlerFor("success");
+    expectHandlerFor("arbitrary");
   });
 })();
