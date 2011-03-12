@@ -70,7 +70,7 @@ var LastFmRequest = fakes.LastFmRequest;
     if (expectations.signed || expectations.signatureHash) {
       assert.ok(pairs.api_sig);
     }
-    else {
+    else if (expectations.signed === false) {
       assert.ok(!pairs.api_sig);
     }
     if (expectations.signatureHash) {
@@ -287,10 +287,35 @@ var LastFmRequest = fakes.LastFmRequest;
     expectDataPair("foo", "bar");
   });
 
-  _(["track.scrobble", "track.nowplaying"]).each(function (method) {
+  it("write requests are always signed", function() {
+    whenMethodIs("album.removeTag");
+    andParamsAre({
+      write: true
+    });
+    expectSignature();
+  });
+
+  _(["album.addTags", "album.removeTag", "album.share",
+    "artist.addTags", "artist.removeTag", "artist.share", "artist.shout",
+    "event.attend", "event.share", "event.shout",
+    "library.addAlbum", "library.addArtist", "library.addTrack",
+    "playlist.addTrack", "playlist.create",
+    "radio.tune",
+    "track.addTags", "track.ban", "track.love", "track.removeTag",
+    "track.scrobble", "track.share", "track.unban", "track.unlove",
+    "track.updateNowPlaying",
+    "user.shout"]).each(function(method) {
     it(method + " is a write (post) request", function() {
       whenMethodIs(method);
       expectHttpMethod("POST");
+    });
+  });
+
+  _(["auth.getMobileSession", "auth.getSession", "auth.getToken",
+    "radio.getPlaylist"]).each(function(method) {
+    it(method + " is signed", function() {
+      whenMethodIs(method);
+      expectSignature();
     });
   });
 })();
