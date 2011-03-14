@@ -3,6 +3,7 @@
 ## Next release
 
 * More accurate error reporting from RecentTrackParser
+* Added request() method
 
 ## 0.5.0
 

@@ -17,6 +17,44 @@ Read and write to users recent plays on Last.fm.
 
 ## Documentation
 
+### LastFmRequest
+
+    lastfm.request(method, options);
+
+Returns a `LastFmRequest` instance.
+
+Send request to Last.fm. Requests automatically include the API key and are signed and/or sent via POST as described in the Last.fm API documentation.
+
+Methods:
+
+Accepts any Last.fm API method name, eg "artist.getInfo". 
+
+Options:
+
+All options are passed through to Last.fm with the exception of the following.
+
+- *write*
+
+        Force request to act as a write method. Write methods are signed and sent via POST. Useful for new methods not yet recognised by lastfm-node.
+
+- *signed*
+
+        Force request to be signed. See Last.fm API docs for signature details. Useful for new methods not yet recognised by lastfm-node.
+
+- *handlers*
+
+        Default event handlers to attach to the request object on creation.
+
+Events:
+
+- *success(data)*
+
+        Raw data returned by Last.fm.
+
+- *error(error)*
+
+        Ruh-roh. Either a error returned by Last.fm or a transmission error.
+
 ### RecentTracksStream
 
     lastfm.stream(username);
@@ -236,6 +274,18 @@ When requesting track info the `track` param can be either the track name or a t
           lastfm.update('nowplaying', session, { track: track } );
           lastfm.update('scrobble', session, { track: track, timestamp: 12345678 });
        }
+    });
+
+    var request = lastfm.request("artist.getInfo", {
+        artist: "The Mae Shi",
+        handlers: {
+            success: function(data) {
+                console.log("Success: " + data);
+            },
+            error: function(error) {
+                console.log("Error: " + error.message);
+            }
+        }
     });
 
 ## Influences
