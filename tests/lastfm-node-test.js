@@ -29,7 +29,7 @@ var querystring = require("querystring");
   })
 
   it("configures api key", function() {
-    assert.equal("abcdef12345", lastfm.params.api_key);
+    assert.equal("abcdef12345", lastfm.api_key);
   });
 
   it("configures secret", function() {
