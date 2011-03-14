@@ -1,4 +1,5 @@
 global.Gently = require("gently");
+global.GENTLY_HIJACK = new Gently();
 global.assert = require("assert");
 global.ntest = require('ntest');
 global.it = ntest.it;

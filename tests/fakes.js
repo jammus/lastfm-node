@@ -30,8 +30,10 @@ var ClientResponse = exports.ClientResponse = function() {
 
 ClientResponse.prototype = Object.create(EventEmitter.prototype);
 
-var LastFmRequest = exports.LastFmRequest = function() {
+var LastFmRequest = exports.LastFmRequest = function(connection, url) {
   EventEmitter.call(this);
+  this.connection = connection;
+  this.url = url;
 };
 
 LastFmRequest.prototype = Object.create(EventEmitter.prototype);

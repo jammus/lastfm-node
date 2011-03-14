@@ -28,37 +28,29 @@ describe("a new info instance")
   });
   
   it("allows requests for user info", function() {
-    gently.expect(lastfm, "read", function() {
+    gently.expect(lastfm, "request", function() {
       return new fakes.LastFmRequest();
     });
     var info = new LastFmInfo(lastfm, "user");
   });
 
   it("allows requests for track info", function() {
-    gently.expect(lastfm, "read", function() {
+    gently.expect(lastfm, "request", function() {
       return new fakes.LastFmRequest();
     });
     var info = new LastFmInfo(lastfm, "track");
   });
 
   it("allows all [itemtype].getinfo calls", function() {
-    gently.expect(lastfm, "read", function(params) {
-      assert.equal("event.getinfo", params.method);
+    gently.expect(lastfm, "request", function(method, params) {
+      assert.equal("event.getinfo", method);
       return new fakes.LastFmRequest();
     });
     new LastFmInfo(lastfm, "event");
   });
   
-  it("calls unsigned methods", function() {
-    gently.expect(lastfm, "read", function(params, signed) {
-      assert.equal(false, signed);
-      return new fakes.LastFmRequest();
-    });
-    var info = new LastFmInfo(lastfm, "user");
-  });
-
   it("passes through parameters", function() {
-    gently.expect(lastfm, "read", function(params) {
+    gently.expect(lastfm, "request", function(method, params) {
       assert.equal("username", params.user);
       assert.equal("anything", params.arbitrary);
       return new fakes.LastFmRequest();
@@ -67,7 +59,7 @@ describe("a new info instance")
   });
 
   it("doesnt pass through callback parameters", function() {
-    gently.expect(lastfm, "read", function(params) {
+    gently.expect(lastfm, "request", function(method, params) {
       assert.ok(!params.error);
       assert.ok(!params.success);
       return new fakes.LastFmRequest();
@@ -86,7 +78,7 @@ describe("when receiving data")
   });
 
   it("emits error if response contains error", function() {
-    gently.expect(lastfm, "read", function(params, signed) {
+    gently.expect(lastfm, "request", function() {
       return request;
     });
     new LastFmInfo(lastfm, "track", {
@@ -98,7 +90,7 @@ describe("when receiving data")
   });
 
   it("emits error when receiving unexpected data", function() {
-    gently.expect(lastfm, "read", function(params, signed) {
+    gently.expect(lastfm, "request", function() {
       return request;
     });
     new LastFmInfo(lastfm, "track", {
@@ -110,7 +102,7 @@ describe("when receiving data")
   });
 
   it("emits error if receiving junk", function() {
-      gently.expect(lastfm, "read", function(params, signed) {
+      gently.expect(lastfm, "request", function() {
         return request;
       });
       new LastFmInfo(lastfm, "track", {
@@ -123,7 +115,7 @@ describe("when receiving data")
   });
 
   it("emits success with received data when matches expected type", function() {
-    gently.expect(lastfm, "read", function(params, signed) {
+    gently.expect(lastfm, "request", function() {
         return request;
     });
     new LastFmInfo(lastfm, "track", {
@@ -136,7 +128,7 @@ describe("when receiving data")
   });
 
   it("bubbles up errors", function() {
-    gently.expect(lastfm, "read", function(params, signed) {
+    gently.expect(lastfm, "request", function() {
         return request;
     });
     var info = new LastFmInfo(lastfm, "track");
