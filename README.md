@@ -85,9 +85,9 @@ Options:
 
         Start streaming automatically. Defaults to false.
 
-- *lastPlayed*, *nowPlaying*, *scrobbled*, *stoppedPlaying*, *error*
+- *handlers*
 
-        Event listeners.
+        Default event handlers to attach to the request object on creation.
 
 Events:
 
@@ -135,11 +135,8 @@ Methods:
 
  Authorises user with Last.fm api. See last.fm documentation.
         Options:
-       - *authorised* : `function(session)`
-        Listener for *authorised* event. See below.
-
-       - *error* : `function(error)`
-        Listener for `error` event. See below.
+        - *handlers*
+        Default event handlers to attach to the authorise call.
 
 - *on(event, handler)*
 
@@ -184,13 +181,9 @@ Options:
 
         Required for scrobble requests. Timestamp is in unix time (seconds since 01-01-1970 and is in UTC time).
 
-- *success*
+- *handlers*
 
-        Listener for `success` event.
-
-- *error*
-
-       Listener for `error` event.
+        Default event handlers to attach to the request object on creation.
 
 Events:
 
@@ -218,13 +211,9 @@ Public properties:
 
 Options:
 
-- *success*
+- *handlers*
 
-        Listener for `success` event.
-
-- *error*
-
-       Listener for `error` event.
+        Event handlers to attach to object at creation.
 
 - *various*
 

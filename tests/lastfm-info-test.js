@@ -13,18 +13,19 @@ describe("a new info instance")
 
   it("accepts listeners in options", function() {
     var handlers = { error: function() {}, success: function() {} };
+    var options = { handlers: handlers };
     gently.expect(handlers, "error");
     gently.expect(handlers, "success");
-    var info = new LastFmInfo(lastfm, "", handlers);
+    var info = new LastFmInfo(lastfm, "", options);
     info.emit("success");
   });
   
   it("emits error if type not specified", function() {
-    var handler = { error: function() {}};
-    gently.expect(handler, "error", function(error) {
+    var handlers = { error: function() {}};
+    gently.expect(handlers, "error", function(error) {
       assert.equal("Item type not specified", error.message);
     });
-    var info = new LastFmInfo(lastfm, "", { error: handler.error });
+    var info = new LastFmInfo(lastfm, "", { handlers: handlers });
   });
   
   it("allows requests for user info", function() {
@@ -64,7 +65,7 @@ describe("a new info instance")
       assert.ok(!params.success);
       return new fakes.LastFmRequest();
     });
-    new LastFmInfo(lastfm, "user", { error: function() {}, success: function() {} });
+    new LastFmInfo(lastfm, "user", { handlers:  { error: function() {}, success: function() {} } });
   });
 })();
 
@@ -81,11 +82,11 @@ describe("when receiving data")
     gently.expect(lastfm, "request", function() {
       return request;
     });
-    new LastFmInfo(lastfm, "track", {
+    new LastFmInfo(lastfm, "track", { handlers: {
       error: gently.expect(function errorHandler(error) {
         assert.equal("You must supply either a track & artist name or a track mbid.", error.message);
       })
-    });
+    }});
     request.emit("success", FakeData.NotEnoughTrackInfo);
   });
 
@@ -93,11 +94,11 @@ describe("when receiving data")
     gently.expect(lastfm, "request", function() {
       return request;
     });
-    new LastFmInfo(lastfm, "track", {
+    new LastFmInfo(lastfm, "track", { handlers: {
       error: gently.expect(function errorHandler(error) {
         assert.equal("Unexpected error", error.message);
       })
-    });
+    }});
     request.emit("success", FakeData.SuccessfulAuthorisation);
   });
 
@@ -105,12 +106,12 @@ describe("when receiving data")
       gently.expect(lastfm, "request", function() {
         return request;
       });
-      new LastFmInfo(lastfm, "track", {
+      new LastFmInfo(lastfm, "track", { handlers: {
         error: gently.expect(function errorHandler(error) {
           assert.ok(error.message.indexOf(FakeData.Garbage) > -1);
           assert.ok("Syntax error");
         })
-      });
+      }});
       request.emit("success", FakeData.Garbage);
   });
 
@@ -118,12 +119,12 @@ describe("when receiving data")
     gently.expect(lastfm, "request", function() {
         return request;
     });
-    new LastFmInfo(lastfm, "track", {
+    new LastFmInfo(lastfm, "track", { handlers: {
       success: gently.expect(function success(track) {
         assert.equal("Run To Your Grave", track.name);
         assert.equal("232000", track.duration);
       })
-    });
+    }});
     request.emit("success", FakeData.RunToYourGraveTrackInfo);
   });
 

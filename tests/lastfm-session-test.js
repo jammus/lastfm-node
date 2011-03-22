@@ -148,9 +148,9 @@ var fakes = require("./fakes");
     gently.expect(handler, "error", function(error) {
       assert.equal("No token supplied", error.message); 
     });
-    session.authorise("", {
+    session.authorise("", { handlers: {
       error: handler.error
-    });
+    }});
   });
   
   it("updates session key and user when successful", function() {
@@ -166,9 +166,9 @@ var fakes = require("./fakes");
   it("can have authorised handler specified with authorise call", function() {
     var handler = { authorised: function(session) { } };
     whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
-    session.authorise("token", {
+    session.authorise("token", { handlers: {
       authorised: handler.authorised
-    });
+    }});
   });
   
   it("bubbles up errors", function() {

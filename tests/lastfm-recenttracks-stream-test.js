@@ -42,11 +42,13 @@ var fakes = require("./fakes");
     gently.expect(handlers, "scrobbled");
 
     var trackStream = new RecentTracksStream(lastfm, "username", {
-      error: handlers.error,
-      lastPlayed: handlers.lastPlayed,
-      nowPlaying: handlers.nowPlaying,
-      stoppedPlaying: handlers.stoppedPlaying,
-      scrobbled: handlers.scrobbled
+      handlers: {
+        error: handlers.error,
+        lastPlayed: handlers.lastPlayed,
+        nowPlaying: handlers.nowPlaying,
+        stoppedPlaying: handlers.stoppedPlaying,
+        scrobbled: handlers.scrobbled
+      }
     });
 
     trackStream.emit("error");

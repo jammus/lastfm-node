@@ -8,10 +8,10 @@ var fakes = require("./fakes");
     it("can have success and error handlers specified at creation", function() {
       var gently = new Gently();
       var lastfm = new LastFmNode();
-      var update = new LastFmUpdate(lastfm, "method", new LastFmSession(lastfm, "user", "key"), {
+      var update = new LastFmUpdate(lastfm, "method", new LastFmSession(lastfm, "user", "key"), { handlers: {
           error: gently.expect(function error() {}),
           success: gently.expect(function success() {})
-      });
+      }});
       update.emit("error");
       update.emit("success");
     });
@@ -59,7 +59,8 @@ var fakes = require("./fakes");
   }
 
   function expectSuccess(assertions) {
-    options.success = function(track) {
+    options.handlers = options.handlers || {};
+    options.handlers.success = function(track) {
       if (assertions) {
         assertions(track);
       }
@@ -69,7 +70,8 @@ var fakes = require("./fakes");
   }
 
   function expectError(expectedError) {
-    options.error = gently.expect(function(error) {
+    options.handlers = options.handlers || {};
+    options.handlers.error = gently.expect(function(error) {
       assert.equal(expectedError, error.message);
     });
     new LastFmUpdate(lastfm, method, session, options);
@@ -173,9 +175,11 @@ var fakes = require("./fakes");
     it("emits error when no timestamp supplied", function() {
       new LastFmUpdate(lastfm, "scrobble", authorisedSession, {
         track: FakeTracks.RunToYourGrave,
-        error: gently.expect(function error(error) {
-          assert.equal("Timestamp is required for scrobbling", error.message);
-        })
+        handlers: {
+          error: gently.expect(function error(error) {
+            assert.equal("Timestamp is required for scrobbling", error.message);
+          })
+        }
       });
     });
     
