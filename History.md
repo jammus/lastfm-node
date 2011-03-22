@@ -2,6 +2,12 @@
 
 ## Next release
 
+### Breaking changes
+
+Success and error handler options on LastFmUpdate and LastFmInfo have been removed and replaced with more generic `handlers` option.
+
+### New features
+
 * More accurate error reporting from RecentTrackParser
 * Added request() method
 

@@ -184,13 +184,9 @@ Options:
 
         Required for scrobble requests. Timestamp is in unix time (seconds since 01-01-1970 and is in UTC time).
 
-- *success*
+- *handlers*
 
-        Listener for `success` event.
-
-- *error*
-
-       Listener for `error` event.
+        Default event handlers to attach to the request object on creation.
 
 Events:
 
@@ -218,13 +214,9 @@ Public properties:
 
 Options:
 
-- *success*
+- *handlers*
 
-        Listener for `success` event.
-
-- *error*
-
-       Listener for `error` event.
+        Event handlers to attach to object at creation.
 
 - *various*
 
