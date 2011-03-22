@@ -85,9 +85,9 @@ Options:
 
         Start streaming automatically. Defaults to false.
 
-- *lastPlayed*, *nowPlaying*, *scrobbled*, *stoppedPlaying*, *error*
+- *handlers*
 
-        Event listeners.
+        Default event handlers to attach to the request object on creation.
 
 Events:
 
@@ -135,11 +135,8 @@ Methods:
 
  Authorises user with Last.fm api. See last.fm documentation.
         Options:
-       - *authorised* : `function(session)`
-        Listener for *authorised* event. See below.
-
-       - *error* : `function(error)`
-        Listener for `error` event. See below.
+        - *handlers*
+        Default event handlers to attach to the authorise call.
 
 - *on(event, handler)*
 
