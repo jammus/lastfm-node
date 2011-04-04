@@ -11,7 +11,7 @@
     "node >= 0.2.0"
   ],
   "directories": {
-    "lib": "./lib/lastfm-node"
+    "lib": "./lib/lastfm"
   },
   "dependencies" : {
     "underscore": ""
