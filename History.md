@@ -1,6 +1,6 @@
 # Changelog
 
-## Next release
+## Next version
 
 ### Breaking changes
 
@@ -8,8 +8,12 @@ Event handler options on RecentTrackStream, LastFmUpdate and LastFmInfo have bee
 
 ### New features
 
-* More accurate error reporting from RecentTrackParser
 * Added request() method. Provides low-level support for entire Last.Fm API.
+
+## 0.5.1
+
+* More accurate error reporting from RecentTrackParser
+* v0.4.x support
 
 ## 0.5.0
 
