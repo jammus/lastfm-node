@@ -1,8 +1,9 @@
 # Changelog
 
-## Next release
+## 0.5.1
 
 * More accurate error reporting from RecentTrackParser
+* v0.4.x support
 
 ## 0.5.0
 

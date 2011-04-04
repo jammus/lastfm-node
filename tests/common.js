@@ -1,3 +1,5 @@
+var path = require("path");
+require.paths.unshift(path.dirname(__dirname)+'/lib');
 global.Gently = require("gently");
 global.assert = require("assert");
 global.ntest = require('ntest');
