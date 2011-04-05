@@ -22,7 +22,7 @@
   "devDependencies": {
     "gently" : ""
   },
-  "main": "./lib/lastfm-node/index",
+  "main": "./lib/lastfm/index",
   "engines": {
     "node": "*"
   }
