@@ -5,41 +5,42 @@ var fakes = require("./fakes");
 (function() {
   describe("a LastFm request")
 
-  var host, connection, url, gently, request;
+  var lastfm, connection, url, gently, request;
 
   before(function() {
-    host = "www.example.com";
-    connection = new fakes.Client(80, host);
-    url = "/resource";
+    lastfm = new LastFmNode();
+    connection = new fakes.Client(80, lastfm.host);
     request = new fakes.ClientRequest();
     gently = new Gently();
+    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function() {
+        return connection;
+    });
   });
 
   it("creates a get request", function() {
-    gently.expect(connection, "request", function(method, requestUrl, options) {
-        assert.equal("GET", method);
-        assert.equal(url, requestUrl);
-        assert.equal(host, options.host);
-        return request;
+    gently.expect(connection, "request", function(method, url, options) {
+      assert.equal("GET", method);
+      assert.equal(lastfm.host, options.host);
+      return request;
     });
-    var lastfmRequest = new LastFmRequest(connection, url);
+    var lastfmRequest = new LastFmRequest(lastfm, "any.method");
   });
 
   it("ends the request", function() {
-    gently.expect(connection, "request", function(method, requestUrl, options) {
+    gently.expect(connection, "request", function() {
         return request;
     });
     gently.expect(request, "end");
-    var lastfmRequest = new LastFmRequest(connection, url);
+    var lastfmRequest = new LastFmRequest(lastfm);
   });
 
   it("emits data received when response is complete", function() {
     var chunkOne = "test";
     var chunkTwo = "data";
-    gently.expect(connection, "request", function(method, requestUrl, options) {
+    gently.expect(connection, "request", function() {
         return request;
     });
-    var lastfmRequest = new LastFmRequest(connection, url);
+    var lastfmRequest = new LastFmRequest(lastfm);
     gently.expect(lastfmRequest, "emit", function(event, data) {
       assert.equal("success", event);
       assert.equal(chunkOne + chunkTwo, data);
@@ -53,10 +54,10 @@ var fakes = require("./fakes");
 
   it("bubbles up connection errors", function() {
     var message = "Bubbled error";
-    gently.expect(connection, "request", function(method, requestUrl, options) {
+    gently.expect(connection, "request", function() {
         return request;
     });
-    var lastfmRequest = new LastFmRequest(connection, url);
+    var lastfmRequest = new LastFmRequest(lastfm);
     gently.expect(lastfmRequest, "emit", function(event, error) {
       assert.equal("error", event);
       assert.equal(message, error.message);
@@ -68,34 +69,38 @@ var fakes = require("./fakes");
 (function() {
   describe("a LastFm request with a body")
 
-  var host, connection, url, gently, request, body;
+  var lastfm, connection, url, gently, request, params;
 
   before(function() {
-    host = "www.example.com";
-    connection = new fakes.Client(80, host);
-    url = "/resource";
+    lastfm = new LastFmNode();
+    connection = new fakes.Client(80, lastfm.host);
     request = new fakes.ClientRequest();
     gently = new Gently();
-    body = "foo=bar";
+    params = { foo:"bar" };
+    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function() {
+        return connection;
+    });
   });
 
-  it("creates a post request", function() {
-    gently.expect(connection, "request", function(method, requestUrl, options) {
+  it("write parameter forces a post request", function() {
+    gently.expect(connection, "request", function(method, url, options) {
       assert.equal("POST", method);
-      assert.equal(url, requestUrl);
-      assert.equal(host, options.host);
+      assert.equal(lastfm.url, url);
+      assert.equal(lastfm.host, options.host);
       return request;
     });
-    var lastFmRequest = new LastFmRequest(connection, url, body);
+    params.write = true;
+    var lastFmRequest = new LastFmRequest(lastfm, "any.method", params);
   });
 
-  it("includes additional headers", function() {
-    gently.expect(connection, "request", function(method, requestUrl, options) {
-      assert.equal(body.length, options["Content-Length"]);
+  it("post requests includes additional headers", function() {
+    gently.expect(connection, "request", function(method, url, options) {
+      assert.ok(options["Content-Length"]);
       assert.equal("application/x-www-form-urlencoded", options["Content-Type"]);
       return request;
     });
-    var lastFmRequest = new LastFmRequest(connection, url, body);
+    params.write = true;
+    var lastFmRequest = new LastFmRequest(lastfm, "any.method", params);
   });
 
   it("writes body to request", function() {
@@ -103,8 +108,9 @@ var fakes = require("./fakes");
       return request;
     });
     gently.expect(request, "write", function(data) {
-        assert.equal(body, data);
+        assert.ok(data);
     });
-    var lastFmRequest = new LastFmRequest(connection, url, body);
+    params.write = true;
+    var lastFmRequest = new LastFmRequest(lastfm, "any.method", params);
   });
 })();

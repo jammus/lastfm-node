@@ -32,12 +32,28 @@ var fakes = require("./fakes");
     assert.ok(!trackStream.isStreaming);
   });
 
-  it("requests recent tracks", function() {
-    assert.equal("user.getrecenttracks", trackStream.params.method);
-  });
-
-  it("only requests the most recent track", function() {
-    assert.equal(1, trackStream.params.limit);
+  it("event handlers can be specified in options (deprecated)", function() {
+    var handlers = {};
+    
+    gently.expect(handlers, "error");
+    gently.expect(handlers, "lastPlayed");
+    gently.expect(handlers, "nowPlaying");
+    gently.expect(handlers, "stoppedPlaying");
+    gently.expect(handlers, "scrobbled");
+    
+    var trackStream = new RecentTracksStream(lastfm, "username", {
+      error: handlers.error,
+      lastPlayed: handlers.lastPlayed,
+      nowPlaying: handlers.nowPlaying,
+      stoppedPlaying: handlers.stoppedPlaying,
+      scrobbled: handlers.scrobbled
+    });
+    
+    trackStream.emit("error");
+    trackStream.emit("lastPlayed");
+    trackStream.emit("nowPlaying");
+    trackStream.emit("stoppedPlaying");
+    trackStream.emit("scrobbled");
   });
 
   it("event handlers can be specified in options", function() {
@@ -50,11 +66,13 @@ var fakes = require("./fakes");
     gently.expect(handlers, "scrobbled");
 
     var trackStream = new RecentTracksStream(lastfm, "username", {
-      error: handlers.error,
-      lastPlayed: handlers.lastPlayed,
-      nowPlaying: handlers.nowPlaying,
-      stoppedPlaying: handlers.stoppedPlaying,
-      scrobbled: handlers.scrobbled
+      handlers: {
+        error: handlers.error,
+        lastPlayed: handlers.lastPlayed,
+        nowPlaying: handlers.nowPlaying,
+        stoppedPlaying: handlers.stoppedPlaying,
+        scrobbled: handlers.scrobbled
+      }
     });
 
     trackStream.emit("error");
@@ -196,7 +214,7 @@ var fakes = require("./fakes");
   });
 
   it("starts and stops streaming when requested", function() {
-    gently.expect(lastfm, "read", 1, function(params, signed, callback) {
+    gently.expect(lastfm, "request", 1, function(method, params) {
       return request;
     });
     var trackStream = new RecentTracksStream(lastfm);
@@ -206,7 +224,7 @@ var fakes = require("./fakes");
   });
 
   it("starts automatically when autostart set to true", function() {
-    gently.expect(lastfm, "read", function() {
+    gently.expect(lastfm, "request", function() {
       return request;
     });
     var trackStream = new RecentTracksStream(lastfm, "username", { autostart: true} );
@@ -214,9 +232,28 @@ var fakes = require("./fakes");
     trackStream.stop();
   });
 
+  it("calls user.getrecenttracks method for user", function() {
+    gently.expect(lastfm, "request", function(method, params) {
+      assert.equal("user.getrecenttracks", method);
+      assert.equal("username", params.user);
+      return request;
+    });
+    var trackStream = new RecentTracksStream(lastfm, "username", { autostart: true} );
+    trackStream.stop();
+  });
+
+  it("only fetches most recent track", function() {
+    gently.expect(lastfm, "request", function(method, params) {
+      assert.equal(1, params.limit);
+      return request;
+    });
+    var trackStream = new RecentTracksStream(lastfm, "username", { autostart: true} );
+    trackStream.stop();
+  });
+
   it("bubbles up errors", function() {
     var errorMessage = "Bubbled error";
-    gently.expect(lastfm, "read", function() {
+    gently.expect(lastfm, "request", function() {
       return request;
     });
     var trackStream = new RecentTracksStream(lastfm, "username", { autostart:true });

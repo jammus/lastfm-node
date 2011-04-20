@@ -5,13 +5,24 @@ var fakes = require("./fakes");
 
 (function() {
   describe("new LastFmUpdate")
-    it("can have success and error handlers specified at creation", function() {
+    it("can have success and error handlers specified at creation (deprecated)", function() {
       var gently = new Gently();
       var lastfm = new LastFmNode();
       var update = new LastFmUpdate(lastfm, "method", new LastFmSession(lastfm, "user", "key"), {
+        error: gently.expect(function error() {}),
+        success: gently.expect(function success() {})
+      });
+      update.emit("error");
+      update.emit("success");
+    });
+
+    it("can have success and error handlers specified in option at creation", function() {
+      var gently = new Gently();
+      var lastfm = new LastFmNode();
+      var update = new LastFmUpdate(lastfm, "method", new LastFmSession(lastfm, "user", "key"), { handlers: {
           error: gently.expect(function error() {}),
           success: gently.expect(function success() {})
-      });
+      }});
       update.emit("error");
       update.emit("success");
     });
@@ -34,14 +45,14 @@ var fakes = require("./fakes");
 
   function whenWriteRequestReturns(data) {
     returndata = data;
-    gently.expect(lastfm, "write", function(params, signed) {
+    gently.expect(lastfm, "request", function(method, params) {
       return request;
     });
   }
 
   function whenWriteRequestThrowsError(errorMessage) {
     requestError = errorMessage;
-    gently.expect(lastfm, "write", function(params, signed) {
+    gently.expect(lastfm, "request", function(method, params) {
       return request;
     });
   }
@@ -59,7 +70,8 @@ var fakes = require("./fakes");
   }
 
   function expectSuccess(assertions) {
-    options.success = function(track) {
+    options.handlers = options.handlers || {};
+    options.handlers.success = function(track) {
       if (assertions) {
         assertions(track);
       }
@@ -69,7 +81,8 @@ var fakes = require("./fakes");
   }
 
   function expectError(expectedError) {
-    options.error = gently.expect(function(error) {
+    options.handlers = options.handlers || {};
+    options.handlers.error = gently.expect(function(error) {
       assert.equal(expectedError, error.message);
     });
     new LastFmUpdate(lastfm, method, session, options);
@@ -93,14 +106,6 @@ var fakes = require("./fakes");
       });
     });
   
-    it("sends a signed request", function() {
-      gently.expect(lastfm, "write", function(params, signed) {
-        assert.ok(signed);
-        return request;
-      });
-      new LastFmUpdate(lastfm, "nowplaying", authorisedSession, { track: FakeTracks.RunToYourGrave });
-  });
-  
     it("emits error when problem updating", function() {
       whenWriteRequestReturns(FakeData.UpdateError);
       andMethodIs("nowplaying");
@@ -117,8 +122,8 @@ var fakes = require("./fakes");
     });
   
     it("uses updateNowPlaying method", function() {
-      gently.expect(lastfm, "write", function(params) {
-        assert.equal("track.updateNowPlaying", params.method);
+      gently.expect(lastfm, "request", function(method, params) {
+        assert.equal("track.updateNowPlaying", method);
         return request;
       });
       new LastFmUpdate(lastfm, "nowplaying", authorisedSession, {
@@ -127,7 +132,7 @@ var fakes = require("./fakes");
     });
     
     it("sends required parameters", function() {
-      gently.expect(lastfm, "write", function(params) {
+      gently.expect(lastfm, "request", function(method, params) {
         assert.equal("The Mae Shi", params.artist);
         assert.equal("Run To Your Grave", params.track);
         assert.equal("key", params.sk);
@@ -151,7 +156,7 @@ var fakes = require("./fakes");
     });
   
     it("sends duration when supplied", function() {
-      gently.expect(lastfm, "write", function(params) {
+      gently.expect(lastfm, "request", function(method, params) {
         assert.equal(232000, params.duration);
         return request;
       });
@@ -181,15 +186,17 @@ var fakes = require("./fakes");
     it("emits error when no timestamp supplied", function() {
       new LastFmUpdate(lastfm, "scrobble", authorisedSession, {
         track: FakeTracks.RunToYourGrave,
-        error: gently.expect(function error(error) {
-          assert.equal("Timestamp is required for scrobbling", error.message);
-        })
+        handlers: {
+          error: gently.expect(function error(error) {
+            assert.equal("Timestamp is required for scrobbling", error.message);
+          })
+        }
       });
     });
     
     it("uses scrobble method", function() {
-      gently.expect(lastfm, "write", function(params) {
-        assert.equal("track.scrobble", params.method);
+      gently.expect(lastfm, "request", function(method, params) {
+        assert.equal("track.scrobble", method);
         return request;
       });
       new LastFmUpdate(lastfm, "scrobble", authorisedSession, {
@@ -199,7 +206,7 @@ var fakes = require("./fakes");
     });
   
     it("sends required parameters", function() {
-      gently.expect(lastfm, "write", function(params) {
+      gently.expect(lastfm, "request", function(method, params) {
         assert.equal("The Mae Shi", params.artist);
         assert.equal("Run To Your Grave", params.track);
         assert.equal("key", params.sk);

@@ -75,14 +75,14 @@ var fakes = require("./fakes");
 
   function whenReadRequestReturns(data) {
     returndata = data;
-    gently.expect(lastfm, "read", function(params, signed) {
+    gently.expect(lastfm, "request", function() {
       return request;
     });
   }
 
   function whenReadRequestThrowsError(message) {
     readError = message;
-    gently.expect(lastfm, "read", function(params, signed) {
+    gently.expect(lastfm, "request", function() {
       return request;
     });
   }
@@ -105,7 +105,7 @@ var fakes = require("./fakes");
   });
   
   it("contains supplied token", function() {
-    gently.expect(lastfm, "read", function(params) {
+    gently.expect(lastfm, "request", function(method, params) {
       assert.equal("token", params.token);
       return request;
     });
@@ -113,16 +113,8 @@ var fakes = require("./fakes");
   });
   
   it("uses getSession method", function() {
-    gently.expect(lastfm, "read", function(params) {
-      assert.equal("auth.getsession", params.method);
-      return request;
-    });
-    session.authorise("token");
-  });
-  
-  it("is signed", function() {
-    gently.expect(lastfm, "read", function(params, signed) {
-      assert.ok(signed);
+    gently.expect(lastfm, "request", function(method, params) {
+      assert.equal("auth.getsession", method);
       return request;
     });
     session.authorise("token");
@@ -156,9 +148,9 @@ var fakes = require("./fakes");
     gently.expect(handler, "error", function(error) {
       assert.equal("No token supplied", error.message); 
     });
-    session.authorise("", {
+    session.authorise("", { handlers: {
       error: handler.error
-    });
+    }});
   });
   
   it("updates session key and user when successful", function() {
@@ -174,9 +166,9 @@ var fakes = require("./fakes");
   it("can have authorised handler specified with authorise call", function() {
     var handler = { authorised: function(session) { } };
     whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
-    session.authorise("token", {
+    session.authorise("token", { handlers: {
       authorised: handler.authorised
-    });
+    }});
   });
   
   it("bubbles up errors", function() {
