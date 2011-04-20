@@ -11,7 +11,15 @@ describe("a new info instance")
     gently = new Gently();
   });
 
-  it("accepts listeners in options", function() {
+  it("accepts listeners in options (deprecated)", function() {
+      var handlers = { error: function() {}, success: function() {} };
+      gently.expect(handlers, "error");
+      gently.expect(handlers, "success");
+      var info = new LastFmInfo(lastfm, "", handlers);
+      info.emit("success");
+    });
+
+  it("accepts listeners in handler options", function() {
     var handlers = { error: function() {}, success: function() {} };
     var options = { handlers: handlers };
     gently.expect(handlers, "error");

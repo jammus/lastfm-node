@@ -32,6 +32,30 @@ var fakes = require("./fakes");
     assert.ok(!trackStream.isStreaming);
   });
 
+  it("event handlers can be specified in options (deprecated)", function() {
+    var handlers = {};
+    
+    gently.expect(handlers, "error");
+    gently.expect(handlers, "lastPlayed");
+    gently.expect(handlers, "nowPlaying");
+    gently.expect(handlers, "stoppedPlaying");
+    gently.expect(handlers, "scrobbled");
+    
+    var trackStream = new RecentTracksStream(lastfm, "username", {
+      error: handlers.error,
+      lastPlayed: handlers.lastPlayed,
+      nowPlaying: handlers.nowPlaying,
+      stoppedPlaying: handlers.stoppedPlaying,
+      scrobbled: handlers.scrobbled
+    });
+    
+    trackStream.emit("error");
+    trackStream.emit("lastPlayed");
+    trackStream.emit("nowPlaying");
+    trackStream.emit("stoppedPlaying");
+    trackStream.emit("scrobbled");
+  });
+
   it("event handlers can be specified in options", function() {
     var handlers = {};
    

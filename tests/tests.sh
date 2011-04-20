@@ -1,0 +1,10 @@
+#!/bin/bash
+. ~/.nvm/nvm.sh
+nvm use v0.2.6
+node ./index.js
+nvm use v0.3.3
+node ./index.js
+nvm use v0.4.0
+node ./index.js
+nvm use v0.4.3
+node ./index.js
