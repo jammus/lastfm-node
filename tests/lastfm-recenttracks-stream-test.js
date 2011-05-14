@@ -119,13 +119,17 @@ var fakes = require("./fakes");
   });
 
   it("emits now playing and last played if both received", function() {
-    gently.expect(trackStream, "emit", function(event, track) {
-      assert.equal("nowPlaying", event);
-      assert.equal("Theme Song", track.name);
-    });
-    gently.expect(trackStream, "emit", function(event, track) {
-      assert.equal("lastPlayed", event);
-      assert.equal("Over The Moon", track.name);
+    var count = 0;
+    gently.expect(trackStream, "emit", 2, function(event, track) {
+      if (count == 0) {
+          assert.equal("nowPlaying", event);
+          assert.equal("Theme Song", track.name);
+      }
+      else {
+          assert.equal("lastPlayed", event);
+          assert.equal("Over The Moon", track.name);
+      }
+      count++;
     });
     parser.emit("track", FakeTracks.NowPlayingAndScrobbled);
   });
@@ -149,55 +153,31 @@ var fakes = require("./fakes");
   });
 
   it("emits stoppedPlaying track when now playing stops", function() {
-    gently.expect(trackStream, "emit", function(event, track) {
-      assert.equal("lastPlayed", event);
-      assert.equal("Run To Your Grave", track.name);
-    });
-    gently.expect(trackStream, "emit", function(event, track) {
-      assert.equal("nowPlaying", event);
-      assert.equal("Run To Your Grave", track.name);
-    });
-    gently.expect(trackStream, "emit", function(event, track) {
+    parser.emit("track", FakeTracks.RunToYourGrave);
+    parser.emit("track", FakeTracks.RunToYourGrave_NP);
+    gently.expect(trackStream, "emit", 1, function(event, track) {
       assert.equal("stoppedPlaying", event);
       assert.equal("Run To Your Grave", track.name);
     });
-    parser.emit("track", FakeTracks.RunToYourGrave);
-    parser.emit("track", FakeTracks.RunToYourGrave_NP);
     parser.emit("track", FakeTracks.RunToYourGrave);
   });
 
   it("emits scrobbled when last play changes", function() {
-    gently.expect(trackStream, "emit", function(event, track) {
-      assert.equal("lastPlayed", event);
-      assert.equal("Lamb and the Lion", track.name);
-    });
-    gently.expect(trackStream, "emit", function(event, track) {
-      assert.equal("nowPlaying", event);
-      assert.equal("Run To Your Grave", track.name);
-    });
-    gently.expect(trackStream, "emit", function(event, track) {
+    parser.emit("track", FakeTracks.LambAndTheLion);
+    parser.emit("track", FakeTracks.RunToYourGrave_NP);
+    gently.expect(trackStream, "emit", 1, function(event, track) {
       assert.equal("scrobbled", event);
       assert.equal("Run To Your Grave", track.name);
     });
-    gently.expect(trackStream, "emit", function(event, track) {
-      assert.equal("stoppedPlaying", event);
-      assert.equal("Run To Your Grave", track.name);
-    });
-    parser.emit("track", FakeTracks.LambAndTheLion);
-    parser.emit("track", FakeTracks.RunToYourGrave_NP);
     parser.emit("track", FakeTracks.RunToYourGrave);
   });
   
   it("emits nowPlaying when track same as lastPlayed", function() {
-    gently.expect(trackStream, "emit", function(event, track) {
-      assert.equal("lastPlayed", event);
-      assert.equal("Run To Your Grave", track.name);
-    });
+    parser.emit("track", FakeTracks.RunToYourGrave);
     gently.expect(trackStream, "emit", function(event, track) {
       assert.equal("nowPlaying", event);
       assert.equal("Run To Your Grave", track.name);
     });
-    parser.emit("track", FakeTracks.RunToYourGrave);
     parser.emit("track", FakeTracks.RunToYourGrave_NP);
   });
 })();
