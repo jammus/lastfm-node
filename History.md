@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2
+
+Fixed path issue (regression)
+
 ## 0.6.1
 
 * Reinstated LastFmSession.authorise() handler options which were accidentallly removed rather than deprecated. Thanks to Vytautas Jakutis for the spot.* Fixed LastFmSession.authorise() documentation (Vytautas Jakutis)
