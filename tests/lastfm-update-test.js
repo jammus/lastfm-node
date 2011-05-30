@@ -165,6 +165,19 @@ var fakes = require("./fakes");
         duration: 232000
       });
     });
+
+    it("can have artist and track string parameters supplied", function() {
+      gently.expect(lastfm, "request", function(method, params) {
+        assert.equal("The Mae Shi", params.artist);
+        assert.equal("Run To Your Grave", params.track);
+        assert.equal("key", params.sk);
+        return request;
+      });
+      new LastFmUpdate(lastfm, "nowplaying", authorisedSession, {
+        track: "Run To Your Grave",
+        artist: "The Mae Shi"
+      });
+    });
   
     it("bubbles up errors", function() {
       var errorMessage = "Bubbled error";
@@ -243,5 +256,45 @@ var fakes = require("./fakes");
         timestamp: 12345678
       });
       expectError(errorMessage);
+    });
+
+    it("can have artist and track string parameters supplied", function() {
+      gently.expect(lastfm, "request", function(method, params) {
+        assert.equal("The Mae Shi", params.artist);
+        assert.equal("Run To Your Grave", params.track);
+        assert.equal("key", params.sk);
+        return request;
+      });
+      new LastFmUpdate(lastfm, "scrobble", authorisedSession, {
+        track: "Run To Your Grave",
+        artist: "The Mae Shi",
+        timestamp: 12345678
+      });
+    });
+
+    it("can have arbitrary parameters supplied", function() {
+      gently.expect(lastfm, "request", function(method, params) {
+        assert.equal("somevalue", params.arbitrary);
+        return request;
+      });
+      new LastFmUpdate(lastfm, "scrobble", authorisedSession, {
+        track: "Run To Your Grave",
+        artist: "The Mae Shi",
+        timestamp: 12345678,
+        arbitrary: "somevalue"
+      });
+    });
+
+    it("does not include handler parameters", function() {
+      gently.expect(lastfm, "request", function(method, params) {
+        assert.equal(undefined, params.handlers);
+        return request;
+      });
+      new LastFmUpdate(lastfm, "scrobble", authorisedSession, {
+        track: "Run To Your Grave",
+        artist: "The Mae Shi",
+        timestamp: 12345678,
+        handlers: { success: function() { } }
+      });
     });
 })();

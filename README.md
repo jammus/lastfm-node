@@ -177,6 +177,8 @@ An authorised `LastFmSession` instance is required to make a successful update.
 
 Options:
 
+Accepts all parameters used by track.updateNowPlaying and user.scrobble (see Last.Fm API) as well as:
+
 - *track*
     
         Track for nowplaying and scrobble requests. Uses same format as returned by `RecentTracksStream` events.
