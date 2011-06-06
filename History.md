@@ -2,7 +2,8 @@
 
 ## Next release
 
-LastFmUpdate can accept any parameter to have passed through to Last.Fm. This allows artist/track info to be supplied without having to use the track object from RecentTrackStream.
+* Configurable user-agent string.
+* LastFmUpdate can accept any parameter to have passed through to Last.Fm. This allows artist/track info to be supplied without having to use the track object from RecentTrackStream.
 
 ## 0.6.2
 
