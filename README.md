@@ -12,7 +12,8 @@ Read and write to users recent plays on Last.fm.
   
     var lastfm = new LastFmNode({
       api_key: 'apikey',    // sign-up for a key at http://www.last.fm/api
-      secret: 'secret'
+      secret: 'secret',
+      useragent: 'appname/vX.X MyApp' // optional. defaults to lastfm-node.
     });
 
 ## Documentation
