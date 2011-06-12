@@ -1,6 +1,6 @@
 # Changelog
 
-## Next release
+## 0.6.3
 
 * Fixed bug where success/error handlers on lastfm.info and lastfm.update were being fired twice.
 * Configurable user-agent string.
