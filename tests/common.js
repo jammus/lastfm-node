@@ -11,3 +11,6 @@ global.after = ntest.after;
 global.LastFmNode = require("lastfm").LastFmNode;
 global.FakeData = require("./TestData.js").FakeData;
 global.FakeTracks = require("./TestData.js").FakeTracks;
+if (process.setMaxListeners) {
+    process.setMaxListeners(900);
+}

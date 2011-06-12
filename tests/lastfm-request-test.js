@@ -64,6 +64,24 @@ var fakes = require("./fakes");
     });
     connection.emit("error", new Error(message));
   });
+
+  it("defaults user agent to lastfm-node", function() {
+    gently.expect(connection, "request", function(method, url, options) {
+      assert.equal("lastfm-node", options["User-Agent"]);
+      return request;
+    });
+    var lastFmRequest = new LastFmRequest(lastfm, "any.method");
+  });
+
+  it("can specify user agent in lastfm options", function() {
+    var useragent = "custom-user-agent";
+    gently.expect(connection, "request", function(method, url, options) {
+      assert.equal(useragent, options["User-Agent"]);
+      return request;
+    });
+    var lastfm = new LastFmNode({ useragent: useragent });
+    var lastFmRequest = new LastFmRequest(lastfm, "any.method");
+  });
 })();
 
 (function() {
