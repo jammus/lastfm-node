@@ -71,6 +71,7 @@ describe("a new info instance")
     gently.expect(lastfm, "request", function(method, params) {
       assert.ok(!params.error);
       assert.ok(!params.success);
+      assert.ok(!params.handlers);
       return new fakes.LastFmRequest();
     });
     new LastFmInfo(lastfm, "user", { handlers:  { error: function() {}, success: function() {} } });

@@ -288,13 +288,17 @@ var fakes = require("./fakes");
     it("does not include handler parameters", function() {
       gently.expect(lastfm, "request", function(method, params) {
         assert.equal(undefined, params.handlers);
+        assert.equal(undefined, params.error);
+        assert.equal(undefined, params.success);
         return request;
       });
       new LastFmUpdate(lastfm, "scrobble", authorisedSession, {
         track: "Run To Your Grave",
         artist: "The Mae Shi",
         timestamp: 12345678,
-        handlers: { success: function() { } }
+        handlers: { success: function() { } },
+        success: function() { },
+        error: function() { }
       });
     });
 })();
