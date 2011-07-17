@@ -16,23 +16,21 @@ var RecentTracksParser = require("lastfm/recenttracks-parser");
     gently.expect(parser, "emit", function(event, error) {
       assert.equal("error", event);
     });
-    parser.parse('');
+    parser.parse(null);
   })
 
   it("emits error when no recenttracks object", function() {
     gently.expect(parser, "emit", function(event, error) {
       assert.equal("error", event);
-      assert.ok(error.message.indexOf(FakeData.UnknownObject) > -1);
     });
-    parser.parse(FakeData.UnknownObject);
+    parser.parse(JSON.parse(FakeData.UnknownObject));
   })
 
   it("emits error when no recenttracks.track object", function() {
     gently.expect(parser, "emit", function(event, error) {
       assert.equal("error", event);
-      assert.ok(error.message.indexOf(FakeData.UnexpectedRecentTracks) > -1);
     });
-    parser.parse(FakeData.UnexpectedRecentTracks);
+    parser.parse(JSON.parse(FakeData.UnexpectedRecentTracks));
   });
 
   it("emits track for value of recenttracks.track", function() {
@@ -40,7 +38,7 @@ var RecentTracksParser = require("lastfm/recenttracks-parser");
       assert.equal("track", event);
       assert.equal(42, track);
     });
-    parser.parse(FakeData.SingleRecentTrack);
+    parser.parse(JSON.parse(FakeData.SingleRecentTrack));
   })
 
   it("returns multiple track when array", function() {
@@ -48,22 +46,6 @@ var RecentTracksParser = require("lastfm/recenttracks-parser");
       assert.equal("first", tracks[0]);
       assert.equal("second", tracks[1]);
     });
-    parser.parse(FakeData.MultipleRecentsTracks);
+    parser.parse(JSON.parse(FakeData.MultipleRecentsTracks));
   })
-
-  it("emits error when response contains error", function() {
-    gently.expect(parser, "emit", function(event, error) {
-      assert.equal("error", event);
-      assert.equal(FakeData.Error.message, error.message);
-    });
-    parser.parse(FakeData.Error);
-  });
-
-  it("emits error containing received data when garbage", function() {
-    gently.expect(parser, "emit", function(event, error) {
-      assert.equal("error", event);
-      assert.ok(error.message.indexOf(FakeData.Garbage) > -1);
-    });
-    parser.parse(FakeData.Garbage);
-  });
 })();

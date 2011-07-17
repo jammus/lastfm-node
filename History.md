@@ -1,5 +1,10 @@
 # Changelog
 
+## Next
+
+### Breaking changes
+* The success event on `lastfm.request` now emits parsed JSON rather than raw text.
+
 ## 0.6.3
 
 * Fixed bug where success/error handlers on lastfm.info and lastfm.update were being fired twice.

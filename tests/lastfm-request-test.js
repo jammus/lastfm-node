@@ -1,6 +1,7 @@
 require("./common");
-var LastFmRequest = require("lastfm/lastfm-request");
-var fakes = require("./fakes");
+var _ = require("underscore"),
+    LastFmRequest = require("lastfm/lastfm-request"),
+    fakes = require("./fakes");
 
 (function() {
   describe("a LastFm request")
@@ -13,7 +14,7 @@ var fakes = require("./fakes");
     request = new fakes.ClientRequest();
     gently = new Gently();
     gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function() {
-        return connection;
+      return connection;
     });
   });
 
@@ -34,37 +35,6 @@ var fakes = require("./fakes");
     var lastfmRequest = new LastFmRequest(lastfm);
   });
 
-  it("emits data received when response is complete", function() {
-    var chunkOne = "test";
-    var chunkTwo = "data";
-    gently.expect(connection, "request", function() {
-        return request;
-    });
-    var lastfmRequest = new LastFmRequest(lastfm);
-    gently.expect(lastfmRequest, "emit", function(event, data) {
-      assert.equal("success", event);
-      assert.equal(chunkOne + chunkTwo, data);
-    });
-    var response = new fakes.ClientResponse();
-    request.emit("response", response);
-    response.emit("data", chunkOne);
-    response.emit("data", chunkTwo);
-    response.emit("end");
-  });
-
-  it("bubbles up connection errors", function() {
-    var message = "Bubbled error";
-    gently.expect(connection, "request", function() {
-        return request;
-    });
-    var lastfmRequest = new LastFmRequest(lastfm);
-    gently.expect(lastfmRequest, "emit", function(event, error) {
-      assert.equal("error", event);
-      assert.equal(message, error.message);
-    });
-    connection.emit("error", new Error(message));
-  });
-
   it("defaults user agent to lastfm-node", function() {
     gently.expect(connection, "request", function(method, url, options) {
       assert.equal("lastfm-node", options["User-Agent"]);
@@ -81,6 +51,19 @@ var fakes = require("./fakes");
     });
     var lastfm = new LastFmNode({ useragent: useragent });
     var lastFmRequest = new LastFmRequest(lastfm, "any.method");
+  });
+
+  it("bubbles up connection errors", function() {
+    var message = "Bubbled error";
+    gently.expect(connection, "request", function() {
+        return request;
+    });
+    var lastfmRequest = new LastFmRequest(lastfm);
+    gently.expect(lastfmRequest, "emit", function(event, error) {
+      assert.equal("error", event);
+      assert.equal(message, error.message);
+    });
+    connection.emit("error", new Error(message));
   });
 })();
 
@@ -131,4 +114,82 @@ var fakes = require("./fakes");
     params.write = true;
     var lastFmRequest = new LastFmRequest(lastfm, "any.method", params);
   });
+})();
+
+(function() {
+  var lastfm, connection, url, gently, request, receivedData
+
+  describe("A Lastfm request which returns data")
+
+  before(function() {
+    lastfm = new LastFmNode();
+    connection = new fakes.Client(80, lastfm.host);
+    request = new fakes.ClientRequest();
+    gently = new Gently();
+    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function() {
+      return connection;
+    });
+  });
+
+  it("emits data as json", function() {
+    whenReceiving("{\"testdata\":\"received\"}");
+    expectRequestToEmit(function(event, data) {
+      assert.equal("success", event);
+      assert.equal("received", data.testdata);
+    });
+  });
+
+  it("emits error if received data cannot be parsed to json", function() {
+    whenReceiving("{\"testdata\"");
+    expectRequestToEmit(function(event, error) {
+      assert.equal("error", event);
+      assert.ok(error);
+    });
+  });
+
+  it("emits error if json response contains a lastfm error", function() {
+    whenReceiving("{\"error\": 2, \"message\": \"service does not exist\"}");
+    expectRequestToEmit(function(event, error) {
+      assert.equal("error", event);
+      assert.equal("service does not exist", error.message);
+    });
+  });
+
+  it("accepts data in chunks", function() {
+    whenReceiving(["{\"testda", "ta\":\"recei", "ved\"}"]);
+    expectRequestToEmit(function(event, data) {
+      assert.equal("success", event);
+      assert.equal("received", data.testdata);
+    });
+  });
+
+  it("does not covert to json if requested is different format", function() {
+    var xml = "<somexml />";
+    lastfm.format = "xml";
+    whenReceiving(xml);
+    expectRequestToEmit(function(event, data) {
+      assert.equal(xml, data);
+    });
+  });
+
+  function whenReceiving(data) {
+      if (!data instanceof Array) {
+          data = [data];
+      }
+      receivedData = data;
+  }
+
+  function expectRequestToEmit(expectation) {
+    gently.expect(connection, "request", function() {
+        return request;
+    });
+    var lastfmRequest = new LastFmRequest(lastfm);
+    gently.expect(lastfmRequest, "emit", expectation);
+    var response = new fakes.ClientResponse();
+    request.emit("response", response);
+    _(receivedData).each(function(data) {
+      response.emit("data", data);
+    });
+    response.emit("end");
+  }
 })();
