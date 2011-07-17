@@ -117,7 +117,7 @@ var _ = require("underscore"),
 })();
 
 (function() {
-  var lastfm, connection, url, gently, request, receivedData
+  var lastfm, connection, url, gently, request, receivedData;
 
   describe("A Lastfm request which returns data")
 

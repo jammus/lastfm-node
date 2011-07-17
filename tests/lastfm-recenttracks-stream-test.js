@@ -1,8 +1,9 @@
 require("./common.js");
 
-var RecentTracksParser = require("lastfm/recenttracks-parser");
-var RecentTracksStream = require("lastfm/recenttracks-stream");
-var fakes = require("./fakes");
+var _ = require("underscore"),
+    RecentTracksStream = require("lastfm/recenttracks-stream"),
+    LastFmRequest = require("lastfm/lastfm-request"),
+    fakes = require("./fakes");
 
 (function() {
   var gently, lastfm, trackStream;
@@ -84,43 +85,93 @@ var fakes = require("./fakes");
 })();
 
 (function() {
-  var parser, lastfm, trackStream, gently;
+  var requestEmits = [],
+      previousEmits = [];
+
+  function ifRequestHasPreviouslyEmit(emits) {
+    previousEmits = emits;
+  }
+
+  function whenRequestEmits(count, event, object) {
+    if (typeof count !== "number") {
+      object = event;
+      event = count;
+      count = 1;
+    }
+    if (typeof event !== "string") {
+      object = event;
+      event = "success";
+    }
+    requestEmits = [event, object, count];
+  }
+
+  function expectStreamToEmit(count, expectation) {
+    if (typeof count === "function") {
+      expectation = count;
+      count = 1;
+    }
+    var lastfm = new LastFmNode(),
+        connection = new fakes.Client(80, lastfm.host),
+        request = new fakes.LastFmRequest(),
+        gently = new Gently();
+
+    gently.expect(lastfm, "request", function() {
+      return request;
+    });
+
+    var trackStream = new RecentTracksStream(lastfm, "username");
+    trackStream.start();
+    trackStream.stop();
+    for(var index = 0; index < previousEmits.length; index++) {
+      request.emit("success", previousEmits[index]);
+    }
+    gently.expect(trackStream, "emit", count, expectation);
+    for(var times = 0; times < requestEmits[2]; times++) {
+      request.emit(requestEmits[0], requestEmits[1]);
+    }
+  }
 
   describe("An active stream");
 
-  before(function() { 
-    parser = new RecentTracksParser();
-    lastfm = new LastFmNode();
-    trackStream = new RecentTracksStream(lastfm, "username", { parser: parser });
-    gently = new Gently();
+  before(function() {
+    previousEmits = [];
+    requestEmits = [];
   });
 
   it("bubbles errors", function() {
-    gently.expect(trackStream, "emit", function(event) {
+    whenRequestEmits("error", { error: 1, message: "An error" });
+    expectStreamToEmit(function(event, error) {
       assert.equal("error", event);
+      assert.equal("An error", error.message);
     });
-    parser.emit("error", new Error());
   });
 
   it("emits last played when track received", function() {
-    gently.expect(trackStream, "emit", function(event, track) {
+    whenRequestEmits({ recenttracks: { track:
+      FakeTracks.LambAndTheLion
+    } });
+    expectStreamToEmit(function(event, track) {
       assert.equal("lastPlayed", event);
       assert.equal("Lamb and the Lion", track.name);
     });
-    parser.emit("track", FakeTracks.LambAndTheLion);
   });
 
   it("emits now playing if track flagged now playing", function() {
-    gently.expect(trackStream, "emit", function(event, track) {
+    whenRequestEmits({
+      recenttracks: { track: FakeTracks.RunToYourGrave_NP }
+    });
+    expectStreamToEmit(function(event, track) {
       assert.equal("nowPlaying", event);
       assert.equal("Run To Your Grave", track.name);
     });
-    parser.emit("track", FakeTracks.RunToYourGrave_NP);
   });
 
   it("emits now playing and last played if both received", function() {
     var count = 0;
-    gently.expect(trackStream, "emit", 2, function(event, track) {
+    whenRequestEmits({
+      recenttracks: { track: FakeTracks.NowPlayingAndScrobbled }
+    });
+    expectStreamToEmit(2, function(event, track) {
       if (count == 0) {
           assert.equal("nowPlaying", event);
           assert.equal("Theme Song", track.name);
@@ -131,54 +182,67 @@ var fakes = require("./fakes");
       }
       count++;
     });
-    parser.emit("track", FakeTracks.NowPlayingAndScrobbled);
   });
 
   it("does not re-emit lastPlayed on receipt of same track", function() {
-    gently.expect(trackStream, "emit", 1, function(event, track) {
+    whenRequestEmits(2, {
+      recenttracks: { track: FakeTracks.LambAndTheLion }
+    });
+    expectStreamToEmit(1, function(event, track) {
       assert.equal("lastPlayed", event);
       assert.equal("Lamb and the Lion", track.name);
     });
-    parser.emit("track", FakeTracks.LambAndTheLion);
-    parser.emit("track", FakeTracks.LambAndTheLion);
   });
 
   it("does not re-emit nowPlaying on receipt of same track", function() {
-    gently.expect(trackStream, "emit", 1, function(event, track) {
+    whenRequestEmits(2, {
+      recenttracks: { track: FakeTracks.RunToYourGrave_NP }
+    });
+    expectStreamToEmit(1, function(event, track) {
       assert.equal("nowPlaying", event);
       assert.equal("Run To Your Grave", track.name);
     });
-    parser.emit("track", FakeTracks.RunToYourGrave_NP);
-    parser.emit("track", FakeTracks.RunToYourGrave_NP);
   });
 
   it("emits stoppedPlaying track when now playing stops", function() {
-    parser.emit("track", FakeTracks.RunToYourGrave);
-    parser.emit("track", FakeTracks.RunToYourGrave_NP);
-    gently.expect(trackStream, "emit", 1, function(event, track) {
+    ifRequestHasPreviouslyEmit([
+      { recenttracks: { track: FakeTracks.RunToYourGrave } },
+      { recenttracks: { track: FakeTracks.RunToYourGrave_NP } }
+    ]);
+    whenRequestEmits({
+      recenttracks: { track: FakeTracks.RunToYourGrave }
+    });
+    expectStreamToEmit(function(event, track) {
       assert.equal("stoppedPlaying", event);
       assert.equal("Run To Your Grave", track.name);
     });
-    parser.emit("track", FakeTracks.RunToYourGrave);
   });
 
   it("emits scrobbled when last play changes", function() {
-    parser.emit("track", FakeTracks.LambAndTheLion);
-    parser.emit("track", FakeTracks.RunToYourGrave_NP);
-    gently.expect(trackStream, "emit", 1, function(event, track) {
+    ifRequestHasPreviouslyEmit([
+      { recenttracks: { track: FakeTracks.LambAndTheLion } },
+      { recenttracks: { track: FakeTracks.RunToYourGrave_NP } }
+    ]);
+    whenRequestEmits({
+      recenttracks: { track: FakeTracks.RunToYourGrave }
+    });
+    expectStreamToEmit(function(event, track) {
       assert.equal("scrobbled", event);
       assert.equal("Run To Your Grave", track.name);
     });
-    parser.emit("track", FakeTracks.RunToYourGrave);
   });
   
   it("emits nowPlaying when track same as lastPlayed", function() {
-    parser.emit("track", FakeTracks.RunToYourGrave);
-    gently.expect(trackStream, "emit", function(event, track) {
+    ifRequestHasPreviouslyEmit([
+      { recenttracks: { track: FakeTracks.RunToYourGrave } }
+    ]);
+    whenRequestEmits({
+      recenttracks: { track: FakeTracks.RunToYourGrave_NP }
+    });
+    expectStreamToEmit(function(event, track) {
       assert.equal("nowPlaying", event);
       assert.equal("Run To Your Grave", track.name);
     });
-    parser.emit("track", FakeTracks.RunToYourGrave_NP);
   });
 })();
 
