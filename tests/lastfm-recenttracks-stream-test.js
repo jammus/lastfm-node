@@ -244,6 +244,16 @@ var _ = require("underscore"),
       assert.equal("Run To Your Grave", track.name);
     });
   });
+
+  it("emits error when unexpected item is received", function() {
+    whenRequestEmits({
+      something: "we've never seen before"
+    });
+    expectStreamToEmit(function(event, error) {
+      assert.equal("error", event);
+      assert.equal("Unexpected response", error.message);
+    });
+  });
 })();
 
 (function() {
