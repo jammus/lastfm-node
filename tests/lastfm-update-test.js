@@ -44,7 +44,7 @@ var fakes = require("./fakes");
   }
 
   function whenWriteRequestReturns(data) {
-    returndata = data;
+    returndata = JSON.parse(data);
     gently.expect(lastfm, "request", function(method, params) {
       return request;
     });
@@ -104,16 +104,6 @@ var fakes = require("./fakes");
       assert.throws(function() {
         new LastFmUpdate(lastfm, "method", session);
       });
-    });
-  
-    it("emits error when problem updating", function() {
-      whenWriteRequestReturns(FakeData.UpdateError);
-      andMethodIs("nowplaying");
-      andSessionIs(authorisedSession);
-      andOptionsAre({
-          track: FakeTracks.RunToYourGrave
-      });
-      expectError("Invalid method signature supplied");
     });
   
   describe("nowPlaying updates")

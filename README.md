@@ -48,9 +48,9 @@ All options are passed through to Last.fm with the exception of the following.
 
 Events:
 
-- *success(data)*
+- *success(json)*
 
-        Raw data returned by Last.fm.
+        JSON response from Last.fm
 
 - *error(error)*
 
