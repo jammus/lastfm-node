@@ -138,10 +138,7 @@ Methods:
 
 - *authorise(token, [options])*
 
- Authorises user with Last.fm api. See last.fm documentation.
-        Options:
-        - *handlers*
-        Default event handlers to attach to the authorise call.
+        Authorises user with Last.fm api. See last.fm documentation. Options argument has handlers property that has default event handlers to attach to the LastFmSession instance.
 
 - *on(event, handler)*
 
@@ -282,9 +279,11 @@ When requesting track info the `track` param can be either the track name or a t
 
     var session = lastfm.session();
     session.authorise(token, {
-       authorised: function(session) {
-          lastfm.update('nowplaying', session, { track: track } );
-          lastfm.update('scrobble', session, { track: track, timestamp: 12345678 });
+       handlers: {
+          authorised: function(session) {
+             lastfm.update('nowplaying', session, { track: track } );
+             lastfm.update('scrobble', session, { track: track, timestamp: 12345678 });
+          }
        }
     });
 
