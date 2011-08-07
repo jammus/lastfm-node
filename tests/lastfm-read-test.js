@@ -189,8 +189,10 @@ var LastFmRequest = fakes.LastFmRequest;
 
   it("does not pass through event handler parameters", function() {
     whenMethodIs("any.method");
-    andParamsAre({ handlers: "handlers"});
+    andParamsAre({ handlers: "handlers", error: "error", success: "success" });
     doNotExpectDataKey("handlers");
+    doNotExpectDataKey("error");
+    doNotExpectDataKey("success");
   });
 
   it("auth.getsession has signature", function() {
