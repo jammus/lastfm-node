@@ -201,6 +201,19 @@ var LastFmRequest = fakes.LastFmRequest;
     expectDataPair("mbid", "1234567890");
   });
 
+  it("doesn't include mbid if one isn't supplied", function() {
+    whenMethodIs("any.method");
+    andParamsAre({
+      track: {
+        artist: { "#text": "The Mae Shi" },
+        name: "Run To Your Grave"
+      }
+    });
+    expectDataPair("artist", "The Mae Shi");
+    expectDataPair("track", "Run To Your Grave");
+    doNotExpectDataKey("mbid");
+  });
+
   it("does not pass through event handler parameters", function() {
     whenMethodIs("any.method");
     andParamsAre({ handlers: "handlers", error: "error", success: "success" });
