@@ -1,6 +1,6 @@
 # Roadmap
 
-## 0.7.0
+## 0.7.0 (complete)
 * Responses from lastfm.request are automatically converted to JSON.
 
 ## 0.8.0
