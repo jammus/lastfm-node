@@ -1,9 +1,9 @@
 require("./common.js");
 
-var _ = require("underscore"),
-    RecentTracksStream = require("lastfm/recenttracks-stream"),
-    LastFmRequest = require("lastfm/lastfm-request"),
-    fakes = require("./fakes");
+var _ = require("underscore")
+  , RecentTracksStream = require("lastfm/recenttracks-stream")
+  , LastFmRequest = require("lastfm/lastfm-request")
+  , fakes = require("./fakes");
 
 (function() {
   var gently, lastfm, trackStream;
