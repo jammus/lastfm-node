@@ -123,8 +123,7 @@ var fakes = require("./fakes");
     
     it("sends required parameters", function() {
       gently.expect(lastfm, "request", function(method, params) {
-        assert.equal("The Mae Shi", params.artist);
-        assert.equal("Run To Your Grave", params.track);
+        assert.equal(FakeTracks.RunToYourGrave, params.track);
         assert.equal("key", params.sk);
         return request;
       });
@@ -210,8 +209,7 @@ var fakes = require("./fakes");
   
     it("sends required parameters", function() {
       gently.expect(lastfm, "request", function(method, params) {
-        assert.equal("The Mae Shi", params.artist);
-        assert.equal("Run To Your Grave", params.track);
+        assert.equal(FakeTracks.RunToYourGrave, params.track);
         assert.equal("key", params.sk);
         assert.equal(12345678, params.timestamp);
         return request;

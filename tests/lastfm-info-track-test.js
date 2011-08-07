@@ -29,13 +29,3 @@ describe("a track info request")
       mbid: "1234567890"
     });
   });
-
-  it("can accept basic track object", function() {
-    this.gently.expect(this.lastfm, "request", function(method, params) {
-      assert.equal("The Mae Shi", params.artist);
-      assert.equal("Run To Your Grave", params.track);
-      assert.equal("fakembid", params.mbid);
-      return new fakes.LastFmRequest();
-    });
-    new LastFmInfo(this.lastfm, "track", { track: FakeTracks.RunToYourGrave });
-  });

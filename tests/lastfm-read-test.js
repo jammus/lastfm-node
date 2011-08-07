@@ -187,6 +187,20 @@ var LastFmRequest = fakes.LastFmRequest;
     expectDataPair("user", "jammus");
   });
 
+  it("converts track object to separate parameters", function() {
+    whenMethodIs("any.method");
+    andParamsAre({
+      track: {
+        artist: { "#text": "The Mae Shi" },
+        name: "Run To Your Grave",
+        mbid: "1234567890"
+      }
+    });
+    expectDataPair("artist", "The Mae Shi");
+    expectDataPair("track", "Run To Your Grave");
+    expectDataPair("mbid", "1234567890");
+  });
+
   it("does not pass through event handler parameters", function() {
     whenMethodIs("any.method");
     andParamsAre({ handlers: "handlers", error: "error", success: "success" });
