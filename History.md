@@ -4,6 +4,7 @@
 
 ### Breaking changes
 * The success event on `lastfm.request` now emits parsed JSON rather than raw text.
+* `RecentTracksStream.isStreaming` has been removed in favour of `RecentTracksStream.isStreaming()`.
 
 ## 0.6.3
 
@@ -17,7 +18,8 @@ Fixed path issue (regression)
 
 ## 0.6.1
 
-* Reinstated LastFmSession.authorise() handler options which were accidentallly removed rather than deprecated. Thanks to Vytautas Jakutis for the spot.* Fixed LastFmSession.authorise() documentation (Vytautas Jakutis)
+* Reinstated LastFmSession.authorise() handler options which were accidentallly removed rather than deprecated. Thanks to Vytautas Jakutis for the spot.
+* Fixed LastFmSession.authorise() documentation (Vytautas Jakutis)
 
 ## 0.6.0
 

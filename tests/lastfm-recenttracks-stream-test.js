@@ -16,21 +16,12 @@ var _ = require("underscore"),
     trackStream = new RecentTracksStream(lastfm, "username");
   });
 
-  it("configures user", function() {
-    assert.equal("username", trackStream.user);
-  });
-
-  it("checks every ten seconds", function() {
-    assert.equal(10, trackStream.rate);
-  });
-
   it("accepts listeners", function() {
     trackStream.addListener("event", function() {});
   });
 
   it("is not streaming", function() {
-    var isStreaming = trackStream.isStreaming;
-    assert.ok(!trackStream.isStreaming);
+    assert.ok(!trackStream.isStreaming());
   });
 
   it("event handlers can be specified in options (deprecated)", function() {
@@ -274,7 +265,7 @@ var _ = require("underscore"),
     var trackStream = new RecentTracksStream(lastfm);
     trackStream.start();
     trackStream.stop();
-    assert.ok(!trackStream.isStreaming);
+    assert.ok(!trackStream.isStreaming());
   });
 
   it("starts automatically when autostart set to true", function() {
@@ -282,7 +273,7 @@ var _ = require("underscore"),
       return request;
     });
     var trackStream = new RecentTracksStream(lastfm, "username", { autostart: true} );
-    assert.ok(trackStream.isStreaming);
+    assert.ok(trackStream.isStreaming());
     trackStream.stop();
   });
 

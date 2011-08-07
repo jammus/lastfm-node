@@ -72,6 +72,10 @@ Methods:
 
         Stop streaming recent track info.
 
+- *isStreaming()*
+
+        Boolean. True is nowplaying/recent track data is being actively fetched.
+
 - *on(event, listener)*
 
         Adds a listener for the specified event.
