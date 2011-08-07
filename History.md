@@ -1,6 +1,6 @@
 # Changelog
 
-## Next
+## 0.7.0
 
 ### Breaking changes
 * The success event on `lastfm.request` now emits parsed JSON rather than raw text.
