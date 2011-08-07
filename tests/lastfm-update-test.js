@@ -44,7 +44,7 @@ var fakes = require("./fakes");
   }
 
   function whenWriteRequestReturns(data) {
-    returndata = data;
+    returndata = JSON.parse(data);
     gently.expect(lastfm, "request", function(method, params) {
       return request;
     });
@@ -106,16 +106,6 @@ var fakes = require("./fakes");
       });
     });
   
-    it("emits error when problem updating", function() {
-      whenWriteRequestReturns(FakeData.UpdateError);
-      andMethodIs("nowplaying");
-      andSessionIs(authorisedSession);
-      andOptionsAre({
-          track: FakeTracks.RunToYourGrave
-      });
-      expectError("Invalid method signature supplied");
-    });
-  
   describe("nowPlaying updates")
     before(function() {
       setupFixture();
@@ -133,8 +123,7 @@ var fakes = require("./fakes");
     
     it("sends required parameters", function() {
       gently.expect(lastfm, "request", function(method, params) {
-        assert.equal("The Mae Shi", params.artist);
-        assert.equal("Run To Your Grave", params.track);
+        assert.equal(FakeTracks.RunToYourGrave, params.track);
         assert.equal("key", params.sk);
         return request;
       });
@@ -220,8 +209,7 @@ var fakes = require("./fakes");
   
     it("sends required parameters", function() {
       gently.expect(lastfm, "request", function(method, params) {
-        assert.equal("The Mae Shi", params.artist);
-        assert.equal("Run To Your Grave", params.track);
+        assert.equal(FakeTracks.RunToYourGrave, params.track);
         assert.equal("key", params.sk);
         assert.equal(12345678, params.timestamp);
         return request;

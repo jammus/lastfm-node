@@ -87,18 +87,6 @@ describe("when receiving data")
     request = new fakes.LastFmRequest();
   });
 
-  it("emits error if response contains error", function() {
-    gently.expect(lastfm, "request", function() {
-      return request;
-    });
-    new LastFmInfo(lastfm, "track", { handlers: {
-      error: gently.expect(function errorHandler(error) {
-        assert.equal("You must supply either a track & artist name or a track mbid.", error.message);
-      })
-    }});
-    request.emit("success", FakeData.NotEnoughTrackInfo);
-  });
-
   it("emits error when receiving unexpected data", function() {
     gently.expect(lastfm, "request", function() {
       return request;
@@ -108,20 +96,7 @@ describe("when receiving data")
         assert.equal("Unexpected error", error.message);
       })
     }});
-    request.emit("success", FakeData.SuccessfulAuthorisation);
-  });
-
-  it("emits error if receiving junk", function() {
-      gently.expect(lastfm, "request", function() {
-        return request;
-      });
-      new LastFmInfo(lastfm, "track", { handlers: {
-        error: gently.expect(function errorHandler(error) {
-          assert.ok(error.message.indexOf(FakeData.Garbage) > -1);
-          assert.ok("Syntax error");
-        })
-      }});
-      request.emit("success", FakeData.Garbage);
+    request.emit("success", JSON.parse(FakeData.SuccessfulAuthorisation));
   });
 
   it("emits success with received data when matches expected type", function() {
@@ -134,7 +109,7 @@ describe("when receiving data")
         assert.equal("232000", track.duration);
       })
     }});
-    request.emit("success", FakeData.RunToYourGraveTrackInfo);
+    request.emit("success", JSON.parse(FakeData.RunToYourGraveTrackInfo));
   });
 
   it("bubbles up errors", function() {

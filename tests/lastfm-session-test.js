@@ -74,7 +74,7 @@ var fakes = require("./fakes");
   }
 
   function whenReadRequestReturns(data) {
-    returndata = data;
+    returndata = JSON.parse(data);
     gently.expect(lastfm, "request", function() {
       return request;
     });
@@ -123,12 +123,6 @@ var fakes = require("./fakes");
   describe("a completed LastFmSession authorisation request")
   before(function() {
      setupFixture();
-  });
-  
-  it("emits error when authorisation not successful", function() {
-    whenReadRequestReturns(FakeData.AuthorisationError);
-    andTokenIs("token");
-    expectError("Signature is invalid");
   });
   
   it("emits error when receiving unexpected return data", function() {

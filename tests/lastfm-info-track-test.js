@@ -1,8 +1,11 @@
 require("./common.js");
-var LastFmInfo = require("lastfm/lastfm-info");
-var fakes = require("./fakes");
 
-describe("a track info request")
+var LastFmInfo = require("lastfm/lastfm-info")
+  , fakes = require("./fakes");
+
+(function() {
+  describe("a track info request");
+
   before(function() {
     this.gently = new Gently();
     this.lastfm = new LastFmNode();
@@ -29,13 +32,4 @@ describe("a track info request")
       mbid: "1234567890"
     });
   });
-
-  it("can accept basic track object", function() {
-    this.gently.expect(this.lastfm, "request", function(method, params) {
-      assert.equal("The Mae Shi", params.artist);
-      assert.equal("Run To Your Grave", params.track);
-      assert.equal("fakembid", params.mbid);
-      return new fakes.LastFmRequest();
-    });
-    new LastFmInfo(this.lastfm, "track", { track: FakeTracks.RunToYourGrave });
-  });
+})();
