@@ -1,8 +1,11 @@
 require("./common.js");
-var LastFmInfo = require("lastfm/lastfm-info");
-var fakes = require("./fakes");
 
-describe("a track info request")
+var LastFmInfo = require("lastfm/lastfm-info")
+  , fakes = require("./fakes");
+
+(function() {
+  describe("a track info request");
+
   before(function() {
     this.gently = new Gently();
     this.lastfm = new LastFmNode();
@@ -29,3 +32,4 @@ describe("a track info request")
       mbid: "1234567890"
     });
   });
+})();
