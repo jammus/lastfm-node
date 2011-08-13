@@ -45,7 +45,7 @@ var fakes = require("./fakes");
     update = undefined;
   }
 
-  function whenWriteRequestReturns(data) {
+  function whenRequestReturns(data) {
     errorCode = -1;
     errorMessage = null;
     returndata = JSON.parse(data);
@@ -55,7 +55,7 @@ var fakes = require("./fakes");
     });
   }
 
-  function whenWriteRequestThrowsError(code, message) {
+  function whenRequestThrowsError(code, message) {
     errorCode = code;
     errorMessage = message;
     request = new fakes.LastFmRequest();
@@ -178,7 +178,7 @@ var fakes = require("./fakes");
     });
   
     it("emits success when updated", function() {
-      whenWriteRequestReturns(FakeData.UpdateNowPlayingSuccess);
+      whenRequestReturns(FakeData.UpdateNowPlayingSuccess);
       andMethodIs("nowplaying");
       andSessionIs(authorisedSession);
       andOptionsAre({
@@ -215,7 +215,7 @@ var fakes = require("./fakes");
   
     it("bubbles up errors", function() {
       var errorMessage = "Bubbled error";
-      whenWriteRequestThrowsError(100, errorMessage);
+      whenRequestThrowsError(100, errorMessage);
       andMethodIs("nowplaying");
       andSessionIs(authorisedSession);
       andOptionsAre({
@@ -267,7 +267,7 @@ var fakes = require("./fakes");
     });
   
     it("emits success when updated", function() {
-      whenWriteRequestReturns(FakeData.ScrobbleSuccess);
+      whenRequestReturns(FakeData.ScrobbleSuccess);
       andMethodIs("scrobble");
       andSessionIs(authorisedSession);
       andOptionsAre({
@@ -281,7 +281,7 @@ var fakes = require("./fakes");
   
     it("bubbles up errors", function() {
       var errorMessage = "Bubbled error";
-      whenWriteRequestThrowsError(100, errorMessage);
+      whenRequestThrowsError(100, errorMessage);
       andMethodIs("scrobble");
       andSessionIs(authorisedSession);
       andOptionsAre({
@@ -354,73 +354,73 @@ var fakes = require("./fakes");
     });
 
     it("a error which should trigger a retry does not bubble errors", function() {
-      whenWriteRequestThrowsError(11, "Service Offline");
+      whenRequestThrowsError(11, "Service Offline");
       doNotExpectError();
     });
   
     it("service offline triggers a retry", function() {
-      whenWriteRequestThrowsError(11, "Service Offline");
+      whenRequestThrowsError(11, "Service Offline");
       expectRetry();
     });
   
     it("rate limit exceeded triggers a retry", function() {
-      whenWriteRequestThrowsError(29, "Rate limit exceeded");
+      whenRequestThrowsError(29, "Rate limit exceeded");
       expectRetry();
     });
   
     it("temporarily unavailable triggers a retry", function() {
-      whenWriteRequestThrowsError(16, "Temporarily unavailable");
+      whenRequestThrowsError(16, "Temporarily unavailable");
       expectRetry();
     });
 
     it("nowplaying update never trigger retries", function() {
-      whenWriteRequestThrowsError(16, "Temporarily unavailable");
+      whenRequestThrowsError(16, "Temporarily unavailable");
       andMethodIs("nowplaying");
       expectError();
     });
 
     it("first retry schedules a request after a 10 second delay", function() {
-      whenWriteRequestThrowsError(16, "Temporarily unavailable");
+      whenRequestThrowsError(16, "Temporarily unavailable");
       LastFmUpdate.prototype.scheduleCallback = gently.expect(function testSchedule(callback, delay) {
           assert.equal(delay, 10000);
       });
       doUpdate();
     });
 
+    function onNextRequests(callback) {
+      LastFmUpdate.prototype.scheduleCallback = callback || function() { };
+    }
+
     it("retry triggers another request", function() {
-      var retried = false;
-      whenWriteRequestThrowsError(16, "Temporarily unavailable");
-      LastFmUpdate.prototype.scheduleCallback = function testSchedule(callback) {
-        if (retried) {
-          return;
-        }
-        retried = true;
-        whenWriteRequestThrowsError(16, "Temporarily unavailable");
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      onNextRequests(function(callback) {
+        whenRequestThrowsError(16, "Temporarily unavailable");
+        onNextRequests(null);
         callback();
         expectRetry();
-      };
+      });
       doUpdate();
     });
 
     it("emits succes if retry is successful", function() {
-      whenWriteRequestThrowsError(16, "Temporarily unavailable");
-      LastFmUpdate.prototype.scheduleCallback = function testSchedule(callback) {
-        whenWriteRequestReturns(FakeData.ScrobbleSuccess);
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      onNextRequests(function (callback) {
+        whenRequestReturns(FakeData.ScrobbleSuccess);
         callback();
         expectSuccess(function(track) {
           assert.equal("Run To Your Grave", track.name);
         });
-      };
+      });
       doUpdate();
     });
 
     it("emits succes if retry is non-retry error", function() {
-      whenWriteRequestThrowsError(16, "Temporarily unavailable");
-      LastFmUpdate.prototype.scheduleCallback = function testSchedule(callback) {
-        whenWriteRequestThrowsError(6, "Invalid parameter");
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      onNextRequests(function testSchedule(callback) {
+        whenRequestThrowsError(6, "Invalid parameter");
         callback();
         expectError("Invalid parameter");
-      };
+      });
       doUpdate();
     });
 
@@ -436,16 +436,16 @@ var fakes = require("./fakes");
             30 * 60 * 1000
           ]
         , count = 0;
-      whenWriteRequestThrowsError(16, "Temporarily unavailable");
-      LastFmUpdate.prototype.scheduleCallback = function testSchedule(callback, delay) {
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      onNextRequests(function testSchedule(callback, delay) {
         if (count >= retrySchedule.length) {
           return;
         }
         assert.equal(delay, retrySchedule[count++]);
-        whenWriteRequestThrowsError(16, "Temporarily unavailable");
+        whenRequestThrowsError(16, "Temporarily unavailable");
         callback();
         expectRetry();
-      };
+      });
       expectRetry();
       assert.equal(count, 8);
     });
