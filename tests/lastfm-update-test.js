@@ -392,8 +392,13 @@ var fakes = require("./fakes");
     }
 
     it("retry triggers another request", function() {
+      var retried = false;
       whenRequestThrowsError(16, "Temporarily unavailable");
       onNextRequests(function(callback) {
+        if (retried) {
+          return;
+        }
+        retried = true;
         whenRequestThrowsError(16, "Temporarily unavailable");
         onNextRequests(null);
         callback();
@@ -404,7 +409,7 @@ var fakes = require("./fakes");
 
     it("emits succes if retry is successful", function() {
       whenRequestThrowsError(16, "Temporarily unavailable");
-      onNextRequests(function (callback) {
+      onNextRequests(function(callback) {
         whenRequestReturns(FakeData.ScrobbleSuccess);
         callback();
         expectSuccess(function(track) {
@@ -416,7 +421,7 @@ var fakes = require("./fakes");
 
     it("emits succes if retry is non-retry error", function() {
       whenRequestThrowsError(16, "Temporarily unavailable");
-      onNextRequests(function testSchedule(callback) {
+      onNextRequests(function(callback) {
         whenRequestThrowsError(6, "Invalid parameter");
         callback();
         expectError("Invalid parameter");
@@ -437,7 +442,7 @@ var fakes = require("./fakes");
           ]
         , count = 0;
       whenRequestThrowsError(16, "Temporarily unavailable");
-      onNextRequests(function testSchedule(callback, delay) {
+      onNextRequests(function(callback, delay) {
         if (count >= retrySchedule.length) {
           return;
         }
