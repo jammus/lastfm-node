@@ -42,6 +42,7 @@ var fakes = require("./fakes");
     authorisedSession = new LastFmSession(lastfm, "user", "key");
     errorCode = -1;
     errorMessage = null;
+    update = undefined;
   }
 
   function whenWriteRequestReturns(data) {
@@ -76,22 +77,34 @@ var fakes = require("./fakes");
   }
 
   function expectSuccess(assertions) {
-    options.handlers = options.handlers || {};
-    options.handlers.success = function(track) {
+    var checkSuccess = function(track) {
       if (assertions) {
         assertions(track);
       }
     };
+    if (update) {
+      update.on("success", checkSuccess);
+    }
+    else {
+      options.handlers = options.handlers || {};
+      options.handlers.success = checkSuccess;
+    }
     doUpdate();
   }
 
   function expectError(expectedError) {
-    options.handlers = options.handlers || {};
-    options.handlers.error = gently.expect(function(error) {
+    var checkError = function(error) {
       if (expectedError) {
         assert.equal(expectedError, error.message);
       }
-    });
+    };
+    if (update) {
+      update.on("error", checkError);
+    }
+    else {
+      options.handlers = options.handlers || {};
+      options.handlers.error = gently.expect(checkError);
+    }
     doUpdate();
   }
 
@@ -103,15 +116,21 @@ var fakes = require("./fakes");
     doUpdate();
   }
 
-  function expectRetry(times) {
-    times = times || 1;
-    options.handlers = options.handlers || { };
-    options.handlers.retrying = gently.expect(times, function retrying() { });
+  function expectRetry() {
+    if (update) {
+      gently.expect(update, "emit", function(event) {
+        assert.equal(event, "retrying");
+      });
+    }
+    else {
+      options.handlers = options.handlers || { };
+      options.handlers.retrying = gently.expect(function retrying() { });
+    }
     doUpdate();
   }
 
   function doUpdate() {
-    update = new LastFmUpdate(lastfm, method, session, options);
+    update = update || new LastFmUpdate(lastfm, method, session, options);
     if (errorMessage) {
       request.emit("error", { error: errorCode, message: errorMessage });
     }
@@ -371,57 +390,38 @@ var fakes = require("./fakes");
     it("retry triggers another request", function() {
       var retried = false;
       whenWriteRequestThrowsError(16, "Temporarily unavailable");
-      LastFmUpdate.prototype.scheduleCallback = function testSchedule(callback, delay) {
+      LastFmUpdate.prototype.scheduleCallback = function testSchedule(callback) {
         if (retried) {
           return;
         }
         retried = true;
-        var request = new fakes.LastFmRequest();
-        gently.expect(lastfm, "request", function() {
-          return request;
-        });
+        whenWriteRequestThrowsError(16, "Temporarily unavailable");
         callback();
-        gently.expect(update, "emit", function(event) {
-          assert.equal("retrying", event);
-        });
-        request.emit("error", { error: errorCode, message: errorMessage });
+        expectRetry();
       };
-      expectRetry();
+      doUpdate();
     });
 
     it("emits succes if retry is successful", function() {
       whenWriteRequestThrowsError(16, "Temporarily unavailable");
-      LastFmUpdate.prototype.scheduleCallback = function testSchedule(callback, delay) {
-        var request = new fakes.LastFmRequest();
-        gently.expect(lastfm, "request", function() {
-          return request;
-        });
+      LastFmUpdate.prototype.scheduleCallback = function testSchedule(callback) {
+        whenWriteRequestReturns(FakeData.ScrobbleSuccess);
         callback();
-        gently.expect(update, "emit", function(event, track) {
-          assert.equal("success", event);
+        expectSuccess(function(track) {
           assert.equal("Run To Your Grave", track.name);
         });
-        request.emit("success", FakeData.ScrobbleSuccess);
       };
-      expectRetry();
+      doUpdate();
     });
 
     it("emits succes if retry is non-retry error", function() {
       whenWriteRequestThrowsError(16, "Temporarily unavailable");
-      LastFmUpdate.prototype.scheduleCallback = function testSchedule(callback, delay) {
-        var request = new fakes.LastFmRequest();
-        gently.expect(lastfm, "request", function() {
-          return request;
-        });
+      LastFmUpdate.prototype.scheduleCallback = function testSchedule(callback) {
+        whenWriteRequestThrowsError(6, "Invalid parameter");
         callback();
-        gently.expect(update, "emit", function(event, error) {
-          assert.equal("error", event);
-          assert.equal(6, error.error);
-          assert.equal("Invalid parameter", error.message);
-        });
-        request.emit("error", { error: 6, message: "Invalid parameter" });
+        expectError("Invalid parameter");
       };
-      expectRetry();
+      doUpdate();
     });
 
     it("follows a retry schedule on subsequent failures", function() {
@@ -441,16 +441,10 @@ var fakes = require("./fakes");
         if (count >= retrySchedule.length) {
           return;
         }
-        var request = new fakes.LastFmRequest();
-        gently.expect(lastfm, "request", function() {
-          return request;
-        });
         assert.equal(delay, retrySchedule[count++]);
+        whenWriteRequestThrowsError(16, "Temporarily unavailable");
         callback();
-        gently.expect(update, "emit", function(event) {
-          assert.equal("retrying", event);
-        });
-        request.emit("error", { error: errorCode, message: errorMessage });
+        expectRetry();
       };
       expectRetry();
       assert.equal(count, 8);
