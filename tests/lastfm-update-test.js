@@ -387,46 +387,52 @@ var fakes = require("./fakes");
       doUpdate();
     });
 
-    function onNextRequests(callback) {
-      LastFmUpdate.prototype.scheduleCallback = callback || function() { };
+    function onNextRequests(callback, count) {
+      count = count || 1;
+      var gently = new Gently();
+      LastFmUpdate.prototype.scheduleCallback = gently.expect(count, callback);
+      doUpdate();
+    }
+
+    function lastRequest() {
+      LastFmUpdate.prototype.scheduleCallback = function() { };
+    }
+
+    function whenNextRequestThrowsError(request, code, message) {
+      whenRequestThrowsError(code, message);
+      request();
+    }
+
+    function whenNextRequestReturns(request, data) {
+      whenRequestReturns(data);
+      request();
     }
 
     it("retry triggers another request", function() {
-      var retried = false;
       whenRequestThrowsError(16, "Temporarily unavailable");
-      onNextRequests(function(callback) {
-        if (retried) {
-          return;
-        }
-        retried = true;
-        whenRequestThrowsError(16, "Temporarily unavailable");
-        onNextRequests(null);
-        callback();
+      onNextRequests(function(nextRequest) {
+        lastRequest();
+        whenNextRequestThrowsError(nextRequest, 16, "Temporarily unavailable");
         expectRetry();
       });
-      doUpdate();
     });
 
     it("emits succes if retry is successful", function() {
       whenRequestThrowsError(16, "Temporarily unavailable");
-      onNextRequests(function(callback) {
-        whenRequestReturns(FakeData.ScrobbleSuccess);
-        callback();
+      onNextRequests(function(nextRequest) {
+        whenNextRequestReturns(nextRequest, FakeData.ScrobbleSuccess);
         expectSuccess(function(track) {
           assert.equal("Run To Your Grave", track.name);
         });
       });
-      doUpdate();
     });
 
     it("emits succes if retry is non-retry error", function() {
       whenRequestThrowsError(16, "Temporarily unavailable");
-      onNextRequests(function(callback) {
-        whenRequestThrowsError(6, "Invalid parameter");
-        callback();
+      onNextRequests(function(nextRequest) {
+        whenNextRequestThrowsError(nextRequest, 6, "Invalid parameter");
         expectError("Invalid parameter");
       });
-      doUpdate();
     });
 
     it("follows a retry schedule on subsequent failures", function() {
@@ -442,16 +448,13 @@ var fakes = require("./fakes");
           ]
         , count = 0;
       whenRequestThrowsError(16, "Temporarily unavailable");
-      onNextRequests(function(callback, delay) {
-        if (count >= retrySchedule.length) {
-          return;
-        }
+      onNextRequests(function(nextRequest, delay) {
         assert.equal(delay, retrySchedule[count++]);
-        whenRequestThrowsError(16, "Temporarily unavailable");
-        callback();
+        if (count >= retrySchedule.length) {
+          lastRequest();
+        }
+        whenNextRequestThrowsError(nextRequest, 16, "Temporarily unavailable");
         expectRetry();
-      });
-      expectRetry();
-      assert.equal(count, 8);
+      }, retrySchedule.length);
     });
 })();
