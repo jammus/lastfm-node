@@ -92,10 +92,11 @@ var fakes = require("./fakes");
     doUpdate();
   }
 
-  function expectError(expectedError) {
+  function expectError(errorCode, expectedError) {
     var checkError = function(error) {
-      if (expectedError) {
+      if (errorCode || expectedError) {
         assert.equal(expectedError, error.message);
+        assert.equal(errorCode, error.error);
       }
     };
     if (update) {
@@ -145,10 +146,15 @@ var fakes = require("./fakes");
     });
   
     it("fail when the session is not authorised", function() {
-      var session = new LastFmSession();
-      assert.throws(function() {
-        new LastFmUpdate(lastfm, "method", session);
-      });
+      var session = new LastFmSession()
+        , update = new LastFmUpdate(lastfm, "method", session, {
+            handlers: {
+              error: gently.expect(function(error) {
+                assert.equal(error.error, 4);
+                assert.equal(error.message, "Authentication failed");
+              })
+            }
+          });
     });
   
   describe("nowPlaying updates")
@@ -222,7 +228,7 @@ var fakes = require("./fakes");
         track: FakeTracks.RunToYourGrave,
         timestamp: 12345678
       });
-      expectError(errorMessage);
+      expectError(100, errorMessage);
     });
   
   describe("a scrobble request")
@@ -235,7 +241,8 @@ var fakes = require("./fakes");
         track: FakeTracks.RunToYourGrave,
         handlers: {
           error: gently.expect(function error(error) {
-            assert.equal("Timestamp is required for scrobbling", error.message);
+            assert.equal(6, error.error);
+            assert.equal("Invalid parameters - Timestamp is required for scrobbling", error.message);
           })
         }
       });
@@ -288,7 +295,7 @@ var fakes = require("./fakes");
         track: FakeTracks.RunToYourGrave,
         timestamp: 12345678
       });
-      expectError(errorMessage);
+      expectError(100, errorMessage);
     });
 
     it("can have artist and track string parameters supplied", function() {
@@ -431,7 +438,7 @@ var fakes = require("./fakes");
       whenRequestThrowsError(16, "Temporarily unavailable");
       onNextRequests(function(nextRequest) {
         whenNextRequestThrowsError(nextRequest, 6, "Invalid parameter");
-        expectError("Invalid parameter");
+        expectError(6, "Invalid parameter");
       });
     });
 
