@@ -1,5 +1,10 @@
 # Changelog
 
+## Next version
+
+### New features
+* Scrobble request which return error codes 11, 16 or 29 are automatically retried.
+
 ## 0.7.0
 
 ### Breaking changes
