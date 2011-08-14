@@ -29,7 +29,7 @@ var fakes = require("./fakes");
 })();
 
 (function() {
-  var request, returndata, options, session, method, gently, lastfm, authorisedSession, requestError;
+  var request, returndata, options, session, method, gently, lastfm, authorisedSession, errorCode, errorMessage, update;
 
   function setupFixture() {
     request = new fakes.LastFmRequest();
@@ -40,19 +40,26 @@ var fakes = require("./fakes");
     gently = new Gently();
     lastfm = new LastFmNode();
     authorisedSession = new LastFmSession(lastfm, "user", "key");
-    requestError = null;
+    errorCode = -1;
+    errorMessage = null;
+    update = undefined;
   }
 
-  function whenWriteRequestReturns(data) {
+  function whenRequestReturns(data) {
+    errorCode = -1;
+    errorMessage = null;
     returndata = JSON.parse(data);
-    gently.expect(lastfm, "request", function(method, params) {
+    request = new fakes.LastFmRequest();
+    gently.expect(lastfm, "request", function() {
       return request;
     });
   }
 
-  function whenWriteRequestThrowsError(errorMessage) {
-    requestError = errorMessage;
-    gently.expect(lastfm, "request", function(method, params) {
+  function whenRequestThrowsError(code, message) {
+    errorCode = code;
+    errorMessage = message;
+    request = new fakes.LastFmRequest();
+    gently.expect(lastfm, "request", function() {
       return request;
     });
   }
@@ -70,24 +77,65 @@ var fakes = require("./fakes");
   }
 
   function expectSuccess(assertions) {
-    options.handlers = options.handlers || {};
-    options.handlers.success = function(track) {
+    var checkSuccess = function(track) {
       if (assertions) {
         assertions(track);
       }
     };
-    new LastFmUpdate(lastfm, method, session, options);
-    request.emit("success", returndata);
+    if (update) {
+      update.on("success", checkSuccess);
+    }
+    else {
+      options.handlers = options.handlers || {};
+      options.handlers.success = checkSuccess;
+    }
+    doUpdate();
   }
 
-  function expectError(expectedError) {
+  function expectError(errorCode, expectedError) {
+    var checkError = function(error) {
+      if (errorCode || expectedError) {
+        assert.equal(expectedError, error.message);
+        assert.equal(errorCode, error.error);
+      }
+    };
+    if (update) {
+      update.on("error", checkError);
+    }
+    else {
+      options.handlers = options.handlers || {};
+      options.handlers.error = gently.expect(checkError);
+    }
+    doUpdate();
+  }
+
+  function doNotExpectError() {
     options.handlers = options.handlers || {};
-    options.handlers.error = gently.expect(function(error) {
-      assert.equal(expectedError, error.message);
-    });
-    new LastFmUpdate(lastfm, method, session, options);
-    if (requestError) {
-      request.emit("error", new Error(requestError));
+    options.handlers.error = function checkNoErrorThrown(error) {
+      assert.ok(false);
+    };
+    doUpdate();
+  }
+
+  function expectRetry(callback) {
+    callback = callback || function() { };
+    if (update) {
+      gently.expect(update, "emit", function(event, retry) {
+        assert.equal(event, "retrying");
+        callback(retry);
+      });
+    }
+    else {
+      options.handlers = options.handlers || { };
+      options.handlers.retrying = gently.expect(callback);
+    }
+    doUpdate();
+  }
+
+  function doUpdate() {
+    update = update || new LastFmUpdate(lastfm, method, session, options);
+    if (errorMessage) {
+      request.emit("error", { error: errorCode, message: errorMessage });
     }
     else {
       request.emit("success", returndata);
@@ -100,10 +148,15 @@ var fakes = require("./fakes");
     });
   
     it("fail when the session is not authorised", function() {
-      var session = new LastFmSession();
-      assert.throws(function() {
-        new LastFmUpdate(lastfm, "method", session);
-      });
+      var session = new LastFmSession()
+        , update = new LastFmUpdate(lastfm, "method", session, {
+            handlers: {
+              error: gently.expect(function(error) {
+                assert.equal(error.error, 4);
+                assert.equal(error.message, "Authentication failed");
+              })
+            }
+          });
     });
   
   describe("nowPlaying updates")
@@ -133,7 +186,7 @@ var fakes = require("./fakes");
     });
   
     it("emits success when updated", function() {
-      whenWriteRequestReturns(FakeData.UpdateNowPlayingSuccess);
+      whenRequestReturns(FakeData.UpdateNowPlayingSuccess);
       andMethodIs("nowplaying");
       andSessionIs(authorisedSession);
       andOptionsAre({
@@ -170,14 +223,14 @@ var fakes = require("./fakes");
   
     it("bubbles up errors", function() {
       var errorMessage = "Bubbled error";
-      whenWriteRequestThrowsError(errorMessage);
+      whenRequestThrowsError(100, errorMessage);
       andMethodIs("nowplaying");
       andSessionIs(authorisedSession);
       andOptionsAre({
         track: FakeTracks.RunToYourGrave,
         timestamp: 12345678
       });
-      expectError(errorMessage);
+      expectError(100, errorMessage);
     });
   
   describe("a scrobble request")
@@ -190,7 +243,8 @@ var fakes = require("./fakes");
         track: FakeTracks.RunToYourGrave,
         handlers: {
           error: gently.expect(function error(error) {
-            assert.equal("Timestamp is required for scrobbling", error.message);
+            assert.equal(6, error.error);
+            assert.equal("Invalid parameters - Timestamp is required for scrobbling", error.message);
           })
         }
       });
@@ -222,7 +276,7 @@ var fakes = require("./fakes");
     });
   
     it("emits success when updated", function() {
-      whenWriteRequestReturns(FakeData.ScrobbleSuccess);
+      whenRequestReturns(FakeData.ScrobbleSuccess);
       andMethodIs("scrobble");
       andSessionIs(authorisedSession);
       andOptionsAre({
@@ -236,14 +290,14 @@ var fakes = require("./fakes");
   
     it("bubbles up errors", function() {
       var errorMessage = "Bubbled error";
-      whenWriteRequestThrowsError(errorMessage);
+      whenRequestThrowsError(100, errorMessage);
       andMethodIs("scrobble");
       andSessionIs(authorisedSession);
       andOptionsAre({
         track: FakeTracks.RunToYourGrave,
         timestamp: 12345678
       });
-      expectError(errorMessage);
+      expectError(100, errorMessage);
     });
 
     it("can have artist and track string parameters supplied", function() {
@@ -288,5 +342,155 @@ var fakes = require("./fakes");
         success: function() { },
         error: function() { }
       });
+    });
+
+  var tmpFn;
+  describe("update retries")
+    before(function() {
+      tmpFn = LastFmUpdate.prototype.scheduleCallback;
+      LastFmUpdate.prototype.scheduleCallback = function(callback, delay) { };
+      setupFixture();
+      andMethodIs("scrobble");
+      andSessionIs(authorisedSession);
+      andOptionsAre({
+        track: FakeTracks.RunToYourGrave,
+        timestamp: 12345678
+      });
+    });
+  
+    after(function() {
+      LastFmUpdate.prototype.scheduleCallback = tmpFn;
+    });
+
+    it("a error which should trigger a retry does not bubble errors", function() {
+      whenRequestThrowsError(11, "Service Offline");
+      doNotExpectError();
+    });
+  
+    it("service offline triggers a retry", function() {
+      whenRequestThrowsError(11, "Service Offline");
+      expectRetry();
+    });
+  
+    it("rate limit exceeded triggers a retry", function() {
+      whenRequestThrowsError(29, "Rate limit exceeded");
+      expectRetry();
+    });
+  
+    it("temporarily unavailable triggers a retry", function() {
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      expectRetry();
+    });
+
+    it("nowplaying update never trigger retries", function() {
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      andMethodIs("nowplaying");
+      expectError();
+    });
+
+    it("first retry schedules a request after a 10 second delay", function() {
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      LastFmUpdate.prototype.scheduleCallback = gently.expect(function testSchedule(callback, delay) {
+          assert.equal(delay, 10000);
+      });
+      doUpdate();
+    });
+
+    function onNextRequests(callback, count) {
+      count = count || 1;
+      var gently = new Gently();
+      LastFmUpdate.prototype.scheduleCallback = gently.expect(count, callback);
+      doUpdate();
+    }
+
+    function lastRequest() {
+      LastFmUpdate.prototype.scheduleCallback = function() { };
+    }
+
+    function whenNextRequestThrowsError(request, code, message) {
+      whenRequestThrowsError(code, message);
+      request();
+    }
+
+    function whenNextRequestReturns(request, data) {
+      whenRequestReturns(data);
+      request();
+    }
+
+    it("retry triggers another request", function() {
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      onNextRequests(function(nextRequest) {
+        lastRequest();
+        whenNextRequestThrowsError(nextRequest, 16, "Temporarily unavailable");
+        expectRetry();
+      });
+    });
+
+    it("emits succes if retry is successful", function() {
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      onNextRequests(function(nextRequest) {
+        whenNextRequestReturns(nextRequest, FakeData.ScrobbleSuccess);
+        expectSuccess(function(track) {
+          assert.equal("Run To Your Grave", track.name);
+        });
+      });
+    });
+
+    it("emits succes if retry is non-retry error", function() {
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      onNextRequests(function(nextRequest) {
+        whenNextRequestThrowsError(nextRequest, 6, "Invalid parameter");
+        expectError(6, "Invalid parameter");
+      });
+    });
+
+    it("retrying events include error received and delay details", function() {
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      expectRetry(function(retry) {
+          assert.equal(retry.delay, 10000);
+          assert.equal(retry.error, 16);
+          assert.equal(retry.message, "Temporarily unavailable");
+      });
+    });
+
+    var retrySchedule = [
+      10 * 1000,
+      30 * 1000,
+      60 * 1000,
+      5 * 60 * 1000,
+      15 * 60 * 1000,
+      30 * 60 * 1000,
+      30 * 60 * 1000,
+      30 * 60 * 1000
+    ];
+
+    it("follows a retry schedule on subsequent failures", function() {
+      var count = 0;
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      onNextRequests(function(nextRequest, delay) {
+        var expectedDelay = retrySchedule[count++];
+        assert.equal(delay, expectedDelay);
+        if (count >= retrySchedule.length) {
+          lastRequest();
+        }
+        whenNextRequestThrowsError(nextRequest, 16, "Temporarily unavailable");
+        expectRetry();
+      }, retrySchedule.length);
+    });
+
+    it("includes delay in subsequent retry events", function() {
+      var count = 0;
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      onNextRequests(function(nextRequest, delay) {
+        count++;
+        if (count >= retrySchedule.length) {
+          lastRequest();
+        }
+        var expectedDelay = retrySchedule[Math.min(count, retrySchedule.length - 1)];
+        whenNextRequestThrowsError(nextRequest, 16, "Temporarily unavailable");
+        expectRetry(function(retry) {
+          assert.equal(retry.delay, expectedDelay);
+        });
+      }, retrySchedule.length);
     });
 })();
