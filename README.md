@@ -212,8 +212,8 @@ Events:
 - *retrying(retry)*
 
        Scrobble request was not successful but will be retried after a delay. Retry object contains the following properties:  
-       `delay` - The time in milliseconds before the request will be retried.
-       `error` - The error code returned by the Last.fm API.
+       `delay` - The time in milliseconds before the request will be retried.  
+       `error` - The error code returned by the Last.fm API.  
        `message` - The error message returned by the Last.fm API.
 
 - *error(track, error)*
