@@ -58,10 +58,21 @@ var LastFmBase = require("lastfm/lastfm-base");
     assert.notDeepEqual(copy, original);
   });
 
-  it("ignores blacklist of parameters", function() {
+  it("filteres out blacklisted parameters", function() {
     var copy = lastfmBase.filterParameters(original, ["one", "three"]);
     assert.equal(typeof copy.one, "undefined");
     assert.equal(typeof copy.three, "undefined");
     assert.equal(copy.two, 2);
+  });
+
+  it("automatically removed error, success, handler parameters", function() {
+    var copy = lastfmBase.filterParameters({
+        error: emptyFn,
+        success: emptyFn,
+        handlers: { }
+    });
+    assert.equal(typeof copy.error, "undefined");
+    assert.equal(typeof copy.success, "undefined");
+    assert.equal(typeof copy.handlers, "undefined");
   });
 })();
