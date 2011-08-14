@@ -117,15 +117,17 @@ var fakes = require("./fakes");
     doUpdate();
   }
 
-  function expectRetry() {
+  function expectRetry(callback) {
+    callback = callback || function() { };
     if (update) {
-      gently.expect(update, "emit", function(event) {
+      gently.expect(update, "emit", function(event, retry) {
         assert.equal(event, "retrying");
+        callback(retry);
       });
     }
     else {
       options.handlers = options.handlers || { };
-      options.handlers.retrying = gently.expect(function retrying() { });
+      options.handlers.retrying = gently.expect(callback);
     }
     doUpdate();
   }
@@ -442,26 +444,53 @@ var fakes = require("./fakes");
       });
     });
 
+    it("retrying events include error received and delay details", function() {
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      expectRetry(function(retry) {
+          assert.equal(retry.delay, 10000);
+          assert.equal(retry.error, 16);
+          assert.equal(retry.message, "Temporarily unavailable");
+      });
+    });
+
+    var retrySchedule = [
+      10 * 1000,
+      30 * 1000,
+      60 * 1000,
+      5 * 60 * 1000,
+      15 * 60 * 1000,
+      30 * 60 * 1000,
+      30 * 60 * 1000,
+      30 * 60 * 1000
+    ];
+
     it("follows a retry schedule on subsequent failures", function() {
-      var retrySchedule = [
-            10 * 1000,
-            30 * 1000,
-            60 * 1000,
-            5 * 60 * 1000,
-            15 * 60 * 1000,
-            30 * 60 * 1000,
-            30 * 60 * 1000,
-            30 * 60 * 1000
-          ]
-        , count = 0;
+      var count = 0;
       whenRequestThrowsError(16, "Temporarily unavailable");
       onNextRequests(function(nextRequest, delay) {
-        assert.equal(delay, retrySchedule[count++]);
+        var expectedDelay = retrySchedule[count++];
+        assert.equal(delay, expectedDelay);
         if (count >= retrySchedule.length) {
           lastRequest();
         }
         whenNextRequestThrowsError(nextRequest, 16, "Temporarily unavailable");
         expectRetry();
+      }, retrySchedule.length);
+    });
+
+    it("includes delay in subsequent retry events", function() {
+      var count = 0;
+      whenRequestThrowsError(16, "Temporarily unavailable");
+      onNextRequests(function(nextRequest, delay) {
+        count++;
+        if (count >= retrySchedule.length) {
+          lastRequest();
+        }
+        var expectedDelay = retrySchedule[Math.min(count, retrySchedule.length - 1)];
+        whenNextRequestThrowsError(nextRequest, 16, "Temporarily unavailable");
+        expectRetry(function(retry) {
+          assert.equal(retry.delay, expectedDelay);
+        });
       }, retrySchedule.length);
     });
 })();
