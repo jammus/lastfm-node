@@ -309,3 +309,41 @@ var _ = require("underscore")
     trackStream.stop();
   });
 })();
+
+(function() {
+  var lastfm, gently, request;
+
+  describe("Streaming")
+
+  var tmpScheduleFn;
+  before(function() { 
+    tmpScheduleFn = RecentTracksStream.prototype.scheduleCallback;
+    lastfm = new LastFmNode();
+    gently = new Gently();
+    request = new fakes.LastFmRequest();
+  });
+
+  after(function() {
+    RecentTracksStream.prototype.scheduleCallback = tmpScheduleFn;
+  });
+
+  it("queries API every 10 seconds", function() {
+    var trackStream = new RecentTracksStream(lastfm, "username");
+    var count = 0;
+    RecentTracksStream.prototype.scheduleCallback = function(callback, delay) {
+      count++;
+      if (count === 10) {
+        trackStream.stop();
+      }
+      assert.ok(delay, 10000);
+      gently.expect(lastfm, "request", function(method, params) {
+        return request;
+      });
+      callback();
+    };
+    gently.expect(lastfm, "request", function(method, params) {
+      return request;
+    });
+    trackStream.start();
+  });
+})();
