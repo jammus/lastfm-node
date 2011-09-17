@@ -173,7 +173,7 @@ var _ = require("underscore"),
   });
 
   function whenReceiving(data) {
-      if (!data instanceof Array) {
+      if (data.constructor.name !== 'Array') {
           data = [data];
       }
       receivedData = data;
