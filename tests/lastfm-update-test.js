@@ -5,17 +5,6 @@ var fakes = require("./fakes");
 
 (function() {
   describe("new LastFmUpdate")
-    it("can have success and error handlers specified at creation (deprecated)", function() {
-      var gently = new Gently();
-      var lastfm = new LastFmNode();
-      var update = new LastFmUpdate(lastfm, "method", new LastFmSession(lastfm, "user", "key"), {
-        error: gently.expect(function error() {}),
-        success: gently.expect(function success() {})
-      });
-      update.emit("error");
-      update.emit("success");
-    });
-
     it("can have success and error handlers specified in option at creation", function() {
       var gently = new Gently();
       var lastfm = new LastFmNode();

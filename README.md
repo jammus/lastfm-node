@@ -94,10 +94,6 @@ Options:
 
         Default event handlers to attach to the request object on creation.
 
-- *lastPlayed*, *nowPlaying*, *scrobbled*, *stoppedPlaying*, *error*
-
-        **Deprecated:** Event listeners.
-
 Events:
 
 - *lastPlayed(track)*
@@ -195,14 +191,6 @@ Accepts all parameters used by track.updateNowPlaying and user.scrobble (see Las
 
         Default event handlers to attach to the request object on creation.
 
-- *success*
-
-        **Deprecated:** Listener for `success` event.
-
-- *error*
-
-        **Deprecated:** Listener for `error` event.
-
 Events:
 
 - *success(track)*
@@ -243,14 +231,6 @@ Options:
 - *various*
 
        Params as specified in Last.fm API, eg user: "username"
-
-- *success*
-
-       **Deprecated:** Listener for `success` event.
-
-- *error*
-
-       **Deprecated:** Listener for `error` event.
 
 Special cases:
 

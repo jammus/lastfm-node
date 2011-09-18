@@ -2,6 +2,9 @@
 
 ## Next version
 
+### Breaking changes
+* Removed old handler options which were deprecated in 0.6.0.
+
 ### New features
 * Scrobble request which return error codes 11, 16 or 29 are automatically retried.
 
