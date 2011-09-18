@@ -311,7 +311,7 @@ var _ = require("underscore")
 })();
 
 (function() {
-  var lastfm, gently, request;
+  var lastfm, gently;
 
   describe("Streaming")
 
@@ -320,7 +320,6 @@ var _ = require("underscore")
     tmpScheduleFn = RecentTracksStream.prototype.scheduleCallback;
     lastfm = new LastFmNode();
     gently = new Gently();
-    request = new fakes.LastFmRequest();
   });
 
   after(function() {
@@ -337,12 +336,12 @@ var _ = require("underscore")
       }
       assert.ok(delay, 10000);
       gently.expect(lastfm, "request", function(method, params) {
-        return request;
+        return new fakes.LastFmRequest();
       });
       callback();
     };
     gently.expect(lastfm, "request", function(method, params) {
-      return request;
+      return new fakes.LastFmRequest();
     });
     trackStream.start();
   });
