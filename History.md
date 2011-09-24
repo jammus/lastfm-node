@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 0.8.0
 
 ### Breaking changes
 * Removed old handler options which were deprecated in 0.6.0.
