@@ -147,16 +147,6 @@ var fakes = require("./fakes");
     }});
   });
   
-  it("can have error handler specified with authorise call (deprecated)", function() {
-      var handler = { error: function(error) { } };
-      gently.expect(handler, "error", function(error) {
-        assert.equal("No token supplied", error.message); 
-      });
-      session.authorise("", {
-        error: handler.error
-      });
-  });
-
   it("updates session key and user when successful", function() {
     whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
     andTokenIs("token");
@@ -174,16 +164,6 @@ var fakes = require("./fakes");
     session.authorise("token", { handlers: {
       authorised: handler.authorised
     }});
-    request.emit("success", returndata);
-  });
-  
-  it("can have authorised handler specified with authorise call (deprecated)", function() {
-    var handler = { authorised: function(session) { } };
-    whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
-    gently.expect(handler, "authorised");
-    session.authorise("token", {
-      authorised: handler.authorised
-    });
     request.emit("success", returndata);
   });
   

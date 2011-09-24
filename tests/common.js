@@ -14,3 +14,4 @@ global.FakeTracks = require("./TestData.js").FakeTracks;
 if (process.setMaxListeners) {
     process.setMaxListeners(900);
 }
+global.emptyFn = function() { };

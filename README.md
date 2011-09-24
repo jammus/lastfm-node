@@ -94,10 +94,6 @@ Options:
 
         Default event handlers to attach to the request object on creation.
 
-- *lastPlayed*, *nowPlaying*, *scrobbled*, *stoppedPlaying*, *error*
-
-        **Deprecated:** Event listeners.
-
 Events:
 
 - *lastPlayed(track)*
@@ -177,6 +173,8 @@ Valid methods are 'nowplaying' and 'scrobble'.
 
 An authorised `LastFmSession` instance is required to make a successful update.
 
+If a scrobble request receives an 11 (service offline), 16 (temporarily unavailable) or 29 (rate limit exceeded) error code from Last.fm then the request is automatically retried until it is permanently rejected or accepted. The first retry attempt is made after 10 seconds with subsequent requests delayed by 30 seconds, 1 minute, 5 minutes, 15 minutes and then every 30 minutes.
+
 Options:
 
 Accepts all parameters used by track.updateNowPlaying and user.scrobble (see Last.Fm API) as well as:
@@ -193,19 +191,18 @@ Accepts all parameters used by track.updateNowPlaying and user.scrobble (see Las
 
         Default event handlers to attach to the request object on creation.
 
-- *success*
-
-        **Deprecated:** Listener for `success` event.
-
-- *error*
-
-        **Deprecated:** Listener for `error` event.
-
 Events:
 
 - *success(track)*
 
        Update request was successful. 
+
+- *retrying(retry)*
+
+       Scrobble request was not successful but will be retried after a delay. Retry object contains the following properties:  
+       `delay` - The time in milliseconds before the request will be retried.  
+       `error` - The error code returned by the Last.fm API.  
+       `message` - The error message returned by the Last.fm API.
 
 - *error(track, error)*
 
@@ -234,14 +231,6 @@ Options:
 - *various*
 
        Params as specified in Last.fm API, eg user: "username"
-
-- *success*
-
-       **Deprecated:** Listener for `success` event.
-
-- *error*
-
-       **Deprecated:** Listener for `error` event.
 
 Special cases:
 

@@ -24,30 +24,6 @@ var _ = require("underscore")
     assert.ok(!trackStream.isStreaming());
   });
 
-  it("event handlers can be specified in options (deprecated)", function() {
-    var handlers = {};
-    
-    gently.expect(handlers, "error");
-    gently.expect(handlers, "lastPlayed");
-    gently.expect(handlers, "nowPlaying");
-    gently.expect(handlers, "stoppedPlaying");
-    gently.expect(handlers, "scrobbled");
-    
-    var trackStream = new RecentTracksStream(lastfm, "username", {
-      error: handlers.error,
-      lastPlayed: handlers.lastPlayed,
-      nowPlaying: handlers.nowPlaying,
-      stoppedPlaying: handlers.stoppedPlaying,
-      scrobbled: handlers.scrobbled
-    });
-    
-    trackStream.emit("error");
-    trackStream.emit("lastPlayed");
-    trackStream.emit("nowPlaying");
-    trackStream.emit("stoppedPlaying");
-    trackStream.emit("scrobbled");
-  });
-
   it("event handlers can be specified in options", function() {
     var handlers = {};
    
@@ -307,5 +283,42 @@ var _ = require("underscore")
     });
     request.emit("error", new Error(errorMessage));
     trackStream.stop();
+  });
+})();
+
+(function() {
+  var lastfm, gently;
+
+  describe("Streaming")
+
+  var tmpScheduleFn;
+  before(function() { 
+    tmpScheduleFn = RecentTracksStream.prototype.scheduleCallback;
+    lastfm = new LastFmNode();
+    gently = new Gently();
+  });
+
+  after(function() {
+    RecentTracksStream.prototype.scheduleCallback = tmpScheduleFn;
+  });
+
+  it("queries API every 10 seconds", function() {
+    var trackStream = new RecentTracksStream(lastfm, "username");
+    var count = 0;
+    RecentTracksStream.prototype.scheduleCallback = function(callback, delay) {
+      count++;
+      if (count === 10) {
+        trackStream.stop();
+      }
+      assert.ok(delay, 10000);
+      gently.expect(lastfm, "request", function(method, params) {
+        return new fakes.LastFmRequest();
+      });
+      callback();
+    };
+    gently.expect(lastfm, "request", function(method, params) {
+      return new fakes.LastFmRequest();
+    });
+    trackStream.start();
   });
 })();
