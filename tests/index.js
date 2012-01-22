@@ -7,3 +7,4 @@ require("./lastfm-info-track-test.js");
 require("./lastfm-update-test.js");
 require("./lastfm-request-test.js");
 require("./lastfm-base-test.js");
+require("./lastfm-request-caching-test.js");
