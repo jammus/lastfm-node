@@ -1,5 +1,5 @@
 require('./common');
-var LastFmBase = require("lastfm/lastfm-base");
+var LastFmBase = require("../lib/lastfm/lastfm-base");
 
 (function() {
   describe("LastFmBase");

@@ -12,3 +12,5 @@ nvm use v0.4.7
 node ./index.js
 nvm use v0.4.8
 node ./index.js
+nvm use v0.6.2
+node ./index.js

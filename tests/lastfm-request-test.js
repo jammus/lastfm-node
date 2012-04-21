@@ -1,6 +1,6 @@
 require("./common");
 var _ = require("underscore"),
-    LastFmRequest = require("lastfm/lastfm-request"),
+    LastFmRequest = require("../lib/lastfm/lastfm-request"),
     fakes = require("./fakes");
 
 (function() {

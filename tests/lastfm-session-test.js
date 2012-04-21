@@ -1,5 +1,5 @@
 require('./common.js');
-var LastFmSession = require('lastfm/lastfm-session');
+var LastFmSession = require('../lib/lastfm/lastfm-session');
 var fakes = require("./fakes");
 
 (function() {

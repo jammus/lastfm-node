@@ -1,6 +1,6 @@
 require('./common.js');
-var LastFmSession = require('lastfm/lastfm-session');
-var LastFmUpdate = require('lastfm/lastfm-update');
+var LastFmSession = require('../lib/lastfm/lastfm-session');
+var LastFmUpdate = require('../lib/lastfm/lastfm-update');
 var fakes = require("./fakes");
 
 (function() {
