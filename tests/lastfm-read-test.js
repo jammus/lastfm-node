@@ -201,6 +201,31 @@ var LastFmRequest = fakes.LastFmRequest;
     expectDataPair("mbid", "1234567890");
   });
 
+  it("converts track object album details to separate parameters", function() {
+    whenMethodIs("any.method");
+    andParamsAre({
+      track: {
+        artist: { "#text": "The Mae Shi" },
+        name: "Run To Your Grave",
+        album: { "#text": "HLLLYH" }
+      }
+    });
+    expectDataPair("album", "HLLLYH");
+  });
+
+  it("does not overwrite explicitly set album parameters", function() {
+    whenMethodIs("any.method");
+    andParamsAre({
+      track: {
+        artist: { "#text": "The Mae Shi" },
+        name: "Run To Your Grave",
+        album: { "#text": "HLLLYH" }
+      },
+      album: "Run To Your Grave"
+    });
+    expectDataPair("album", "Run To Your Grave");
+  });
+
   it("doesn't include mbid if one isn't supplied", function() {
     whenMethodIs("any.method");
     andParamsAre({
