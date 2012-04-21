@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+* Automatically set album parameter from track details when available.
+* Experimental REPL.
+
 ## 0.8.0
 
 ### Breaking changes
