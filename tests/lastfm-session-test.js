@@ -2,6 +2,7 @@ require('./common.js');
 var LastFmSession = require('../lib/lastfm/lastfm-session');
 var fakes = require("./fakes");
 
+
 (function() {
   describe("a new LastFmSession");
   var session;
@@ -46,20 +47,39 @@ var fakes = require("./fakes");
     lastfm = new LastFmNode();
     session = new LastFmSession(lastfm);
     gently = new Gently();
+    LastFmSession.prototype.scheduleCallback = emptyFn;
   }
 
-  function expectError(expectedError) {
+  function expectError(message) {
     gently.expect(session, "emit", function(event, error) {
       assert.equal("error", event);
-      assert.equal(expectedError, error.message);
+      assert.equal(message, error.message);
     });
+    doRequest();
+  }
+
+  function doRequest() {
     session.authorise(token, options);
     if (readError) {
-      request.emit("error", new Error(readError));
+      request.emit("error", readError);
     }
     else {
       request.emit("success", returndata);
     }
+  }
+
+  function doNotExpectError() {
+    doRequest();
+  }
+
+  function expectRetry(retry) {
+    gently.expect(session, "emit", function(event, details) {
+      assert.equal("retrying", event);
+      if (retry) {
+        assert.deepEqual(details, retry);
+      }
+    });
+    doRequest();
   }
 
   function expectAuthorisation(assertions) {
@@ -80,8 +100,8 @@ var fakes = require("./fakes");
     });
   }
 
-  function whenReadRequestThrowsError(message) {
-    readError = message;
+  function whenReadRequestThrowsError(code, message) {
+    readError = {error: code, message: message };
     gently.expect(lastfm, "request", function() {
       return request;
     });
@@ -169,8 +189,45 @@ var fakes = require("./fakes");
   
   it("bubbles up errors", function() {
     var errorMessage = "Bubbled error";
-    whenReadRequestThrowsError(errorMessage);
+    whenReadRequestThrowsError('any', errorMessage);
     andTokenIs("token");
     expectError(errorMessage);
+  });
+
+  it("does not bubble error when not yet authorised", function() {
+    whenReadRequestThrowsError(14, "This token has not been authorised");
+    andTokenIs("token");
+    doNotExpectError();
+  });
+
+  it("emits a retry event when not yet authorised", function() {
+    whenReadRequestThrowsError(14, "This token has not been authorised");
+    andTokenIs("token");
+    expectRetry({
+        error: 14,
+        message: "This token has not been authorised",
+        delay: 10000
+    });
+  });
+
+  it("schedules a another request 10 seconds later when retrying", function() {
+    whenReadRequestThrowsError(14, "This token has not been authorised");
+    andTokenIs("token");
+    LastFmSession.prototype.scheduleCallback = gently.expect(function(callback, delay) {
+      assert.equal(delay, 10000);
+    });
+    doRequest();
+  });
+
+  it("will retry on temporarily unavailable", function() {
+    whenReadRequestThrowsError(16, "There was a temporary error processing your request. Please try again.");
+    andTokenIs("token");
+    expectRetry();
+  });
+
+  it("will retry on service unavailable", function() {
+    whenReadRequestThrowsError(11, "Service temporarily unavailable.");
+    andTokenIs("token");
+    expectRetry();
   });
 })();
