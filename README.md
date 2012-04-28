@@ -118,11 +118,36 @@ Events:
 
 ### LastFmSession
 
-    lastfm.session([user], [key]);
+    lastfm.session(options);
 
 Returns: a `LastFmSession` instance.
 
-If no key is supplied then the authorise() method must be used before the session can be used to make authenticated calls. See the last.fm API documentation for more info.
+If the user and session key are already known supply these in the options. Otherwise supply a token for authorisation. When a token is supplied the session will be authorised with Last.fm. If the user has not yet approved the token (desktop application flow) then authorisation will be automatically retried.
+
+See the last.fm API documentation for more info on Last.fm authorisation flow.
+
+Options:
+
+- *user*
+
+        User name, if known.
+
+- *key*
+
+        Session key, if known.
+
+- *token*
+
+        Token supplied by auth.getToken or web flow callback.
+
+- *retryInterval*
+
+        Time in milliseconds to leave between retries. Defaults to 10 seconds.
+
+- *handlers*
+
+        Default event handlers to attach to the session object on creation.
+
 
 Public properties:
 
@@ -138,6 +163,7 @@ Methods:
 
 - *authorise(token, [options])*
 
+        Deprecated. Use lastfm.session({ token: token }) instead.
         Authorises user with Last.fm api. See last.fm documentation. Options argument has handlers property that has default event handlers to attach to the LastFmSession instance.
 
 - *on(event, handler)*
@@ -152,16 +178,32 @@ Methods:
 
         Returns true if the session has been authorised or a key was specified in the constructor.
 
+- *cancel()*
+
+        Prevent any further authorisation retries. Only applies if token supplied.
+
 Events:
+
+- *success(session)*
+
+        Authorisation of session was successful.
+        Note: Only emitted if a token was supplied in options. Username/key combinations supplied in options are assumed to be valid.
 
 - *authorised(session)*
 
+        Deprecated: Use success instead.
         Authorisation of session was successful.
-        Note: Only emitted after a call to authorise(). Keys supplied in the constructor are assumed to be valid.
+
+- *retrying(retry)*
+
+       Authorisation request was not successful but will be retried after a delay. Retry object contains the following properties:  
+       `delay` - The time in milliseconds before the request will be retried.  
+       `error` - The error code returned by the Last.fm API.  
+       `message` - The error message returned by the Last.fm API.
 
 - *error(track, error)*
 
-        Ruh-roh.
+        The authorisation was not successful and will not be retried.
 
 ### LastFmUpdate
 
@@ -270,10 +312,10 @@ When requesting track info the `track` param can be either the track name or a t
 
     trackStream.start();
 
-    var session = lastfm.session();
-    session.authorise(token, {
+    var session = lastfm.session({
+       token: token,
        handlers: {
-          authorised: function(session) {
+          success: function(session) {
              lastfm.update('nowplaying', session, { track: track } );
              lastfm.update('scrobble', session, { track: track, timestamp: 12345678 });
           }
