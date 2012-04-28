@@ -178,6 +178,10 @@ Methods:
 
         Returns true if the session has been authorised or a key was specified in the constructor.
 
+- *cancel()*
+
+        Prevent any further authorisation retries. Only applies if token supplied.
+
 Events:
 
 - *success(session)*

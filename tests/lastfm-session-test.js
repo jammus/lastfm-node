@@ -20,7 +20,7 @@ var fakes = require("./fakes");
   });
 
   it("is not authorised", function() {
-    assert.ok(!session.isAuthorised());
+    assert.ok(session.isAuthorised() === false);
   });
 
   it("can configure key and user", function() {
@@ -76,6 +76,13 @@ var fakes = require("./fakes");
       if (retry) {
         assert.deepEqual(details, retry);
       }
+    });
+    doRequest();
+  }
+
+  function doNotExpectRetry() {
+    session.on('retrying', function() {
+      assert.ok(false);
     });
     doRequest();
   }
@@ -259,5 +266,12 @@ var fakes = require("./fakes");
         message: "This token has not been authorised",
         delay: 15000
     });
+  });
+
+  it("can cancel retries", function() {
+    whenReadRequestThrowsError(14, "This token has not been authorised");
+    andTokenIs("token");
+    session.cancel();
+    doNotExpectRetry();
   });
 })();
