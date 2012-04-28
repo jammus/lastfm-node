@@ -186,7 +186,7 @@ var fakes = require("./fakes");
     }});
     request.emit("success", returndata);
   });
-  
+
   it("bubbles up errors", function() {
     var errorMessage = "Bubbled error";
     whenReadRequestThrowsError('any', errorMessage);
@@ -229,5 +229,26 @@ var fakes = require("./fakes");
     whenReadRequestThrowsError(11, "Service temporarily unavailable.");
     andTokenIs("token");
     expectRetry();
+  });
+
+  it("can have the retry interval specified", function() {
+    whenReadRequestThrowsError(14, "This token has not been authorised");
+    andTokenIs("token");
+    andOptionsAre({ retryInterval: 15000 });
+    LastFmSession.prototype.scheduleCallback = gently.expect(function(callback, delay) {
+      assert.equal(delay, 15000);
+    });
+    doRequest();
+  });
+
+  it("user defined retry interval in retry event", function() {
+    whenReadRequestThrowsError(14, "This token has not been authorised");
+    andTokenIs("token");
+    andOptionsAre({ retryInterval: 15000 });
+    expectRetry({
+        error: 14,
+        message: "This token has not been authorised",
+        delay: 15000
+    });
   });
 })();
