@@ -1,5 +1,9 @@
 # Changelog
 
+## Next version
+* Add automatic retries to session authorisation.
+* Deprecated session.authorise() in favour of supplying a token at creation.
+
 ## 0.8.1
 * Automatically set album parameter from track details when available.
 * Experimental REPL.

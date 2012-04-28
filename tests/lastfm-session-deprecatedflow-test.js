@@ -24,13 +24,13 @@ var fakes = require("./fakes");
   });
 
   it("can configure key and user", function() {
-    var session = new LastFmSession(new LastFmNode(), { user: "user", key: "sessionkey" });
+    var session = new LastFmSession(new LastFmNode(), "user", "sessionkey");
     assert.equal("user", session.user);
     assert.equal("sessionkey", session.key);
   });
 
   it("is authorised when it has a key", function() {
-    var session = new LastFmSession(new LastFmNode(), { user: "user", key: "sessionkey" });
+    var session = new LastFmSession(new LastFmNode(), "user", "sessionkey");
     assert.ok(session.isAuthorised());
   });
 })();
@@ -45,6 +45,7 @@ var fakes = require("./fakes");
     options = null;
     request = new fakes.LastFmRequest();
     lastfm = new LastFmNode();
+    session = new LastFmSession(lastfm);
     gently = new Gently();
     LastFmSession.prototype.scheduleCallback = emptyFn;
   }
@@ -58,6 +59,7 @@ var fakes = require("./fakes");
   }
 
   function doRequest() {
+    session.authorise(token, options);
     if (readError) {
       request.emit("error", readError);
     }
@@ -81,20 +83,13 @@ var fakes = require("./fakes");
   }
 
   function expectAuthorisation(assertions) {
-    expectSuccess(assertions, "authorised");
-  }
-
-  function expectSuccess(assertions, expectedEvent) {
-    expectedEvent = expectedEvent || "success";
     gently.expect(session, "emit", function(event, emittedSession) {
-      if (expectedEvent !== event) {
-        return;
-      }
-      assert.equal(expectedEvent, event);
+      assert.equal("authorised", event);
       if (assertions) {
         assertions(emittedSession);
       }
     });
+    session.authorise(token, options);
     request.emit("success", returndata);
   }
 
@@ -113,11 +108,11 @@ var fakes = require("./fakes");
   }
   
   function andTokenIs(setToken) {
-    session = new LastFmSession(lastfm, { token: setToken });
+    token = setToken;
   }
 
   function andOptionsAre(setOptions) {
-    session = new LastFmSession(lastfm, setOptions);
+    options = setOptions;
   }
 
   describe("a LastFmSession authorisation request")
@@ -125,12 +120,8 @@ var fakes = require("./fakes");
      setupFixture();
   });
   
-  it("happens when a token is provided in options", function() {
-    gently.expect(lastfm, "request", function(method, params) {
-        assert.ok(true);
-        return request;
-    });
-    session = new LastFmSession(lastfm, { token: 'token' });
+  it("emits error when no token supplied", function() {
+    expectError("No token supplied");
   });
   
   it("contains supplied token", function() {
@@ -138,7 +129,7 @@ var fakes = require("./fakes");
       assert.equal("token", params.token);
       return request;
     });
-    session = new LastFmSession(lastfm, { token: 'token' });
+    session.authorise("token");
   });
   
   it("uses getSession method", function() {
@@ -146,7 +137,7 @@ var fakes = require("./fakes");
       assert.equal("auth.getsession", method);
       return request;
     });
-    session = new LastFmSession(lastfm, { token: 'token' });
+    session.authorise("token");
   });
   
   describe("a completed LastFmSession authorisation request")
@@ -166,18 +157,14 @@ var fakes = require("./fakes");
     expectAuthorisation();
   });
   
-  it("emits success when authorisation successful", function() {
-    whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
-    andTokenIs("token");
-    expectSuccess();
-  });
-  
-  it("can have error handler specified in options", function() {
-    whenReadRequestThrowsError('any', 'error');
-    session = new LastFmSession(lastfm, { token: 'token', handlers: {
-      error: gently.expect(function error() { })
+  it("can have error handler specified with authorise call", function() {
+    var handler = { error: function(error) { } };
+    gently.expect(handler, "error", function(error) {
+      assert.equal("No token supplied", error.message); 
+    });
+    session.authorise("", { handlers: {
+      error: handler.error
     }});
-    doRequest();
   });
   
   it("updates session key and user when successful", function() {
@@ -191,9 +178,11 @@ var fakes = require("./fakes");
   });
 
   it("can have authorised handler specified with authorise call", function() {
+    var handler = { authorised: function(session) { } };
     whenReadRequestReturns(FakeData.SuccessfulAuthorisation);
-    session = new LastFmSession(lastfm, { token: 'token', handlers: {
-      authorised: gently.expect(function error() { })
+    gently.expect(handler, "authorised");
+    session.authorise("token", { handlers: {
+      authorised: handler.authorised
     }});
     request.emit("success", returndata);
   });
@@ -244,7 +233,8 @@ var fakes = require("./fakes");
 
   it("can have the retry interval specified", function() {
     whenReadRequestThrowsError(14, "This token has not been authorised");
-    andOptionsAre({ token: 'token', retryInterval: 15000 });
+    andTokenIs("token");
+    andOptionsAre({ retryInterval: 15000 });
     LastFmSession.prototype.scheduleCallback = gently.expect(function(callback, delay) {
       assert.equal(delay, 15000);
     });
@@ -253,7 +243,8 @@ var fakes = require("./fakes");
 
   it("user defined retry interval in retry event", function() {
     whenReadRequestThrowsError(14, "This token has not been authorised");
-    andOptionsAre({ token: 'token', retryInterval: 15000 });
+    andTokenIs("token");
+    andOptionsAre({ retryInterval: 15000 });
     expectRetry({
         error: 14,
         message: "This token has not been authorised",
