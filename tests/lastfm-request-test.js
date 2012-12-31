@@ -13,31 +13,28 @@ var _ = require("underscore"),
     connection = new fakes.Client(80, lastfm.host);
     request = new fakes.ClientRequest();
     gently = new Gently();
-    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function() {
-      return connection;
-    });
   });
 
   it("creates a get request", function() {
-    gently.expect(connection, "request", function(method, url, options) {
-      assert.equal("GET", method);
-      assert.equal(lastfm.host, options.host);
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
+      assert.equal("GET", options.method);
+      assert.equal(lastfm.host, options.hostname);
       return request;
     });
     var lastfmRequest = new LastFmRequest(lastfm, "any.method");
   });
 
   it("ends the request", function() {
-    gently.expect(connection, "request", function() {
-        return request;
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function() {
+      return request;
     });
     gently.expect(request, "end");
     var lastfmRequest = new LastFmRequest(lastfm);
   });
 
   it("defaults user agent to lastfm-node", function() {
-    gently.expect(connection, "request", function(method, url, options) {
-      assert.equal("lastfm-node", options["User-Agent"]);
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
+      assert.equal("lastfm-node", options.headers["User-Agent"]);
       return request;
     });
     var lastFmRequest = new LastFmRequest(lastfm, "any.method");
@@ -45,8 +42,8 @@ var _ = require("underscore"),
 
   it("can specify user agent in lastfm options", function() {
     var useragent = "custom-user-agent";
-    gently.expect(connection, "request", function(method, url, options) {
-      assert.equal(useragent, options["User-Agent"]);
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
+      assert.equal(useragent, options.headers["User-Agent"]);
       return request;
     });
     var lastfm = new LastFmNode({ useragent: useragent });
@@ -55,15 +52,15 @@ var _ = require("underscore"),
 
   it("bubbles up connection errors", function() {
     var message = "Bubbled error";
-    gently.expect(connection, "request", function() {
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
         return request;
     });
-    var lastfmRequest = new LastFmRequest(lastfm);
+    var lastfmRequest = new LastFmRequest(lastfm, "any.method");
     gently.expect(lastfmRequest, "emit", function(event, error) {
       assert.equal("error", event);
       assert.equal(message, error.message);
     });
-    connection.emit("error", new Error(message));
+    request.emit("error", new Error(message));
   });
 })();
 
@@ -78,16 +75,13 @@ var _ = require("underscore"),
     request = new fakes.ClientRequest();
     gently = new Gently();
     params = { foo:"bar" };
-    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function() {
-        return connection;
-    });
   });
 
   it("write parameter forces a post request", function() {
-    gently.expect(connection, "request", function(method, url, options) {
-      assert.equal("POST", method);
-      assert.equal(lastfm.url, url);
-      assert.equal(lastfm.host, options.host);
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
+      assert.equal("POST", options.method);
+      assert.equal(lastfm.url, options.path);
+      assert.equal(lastfm.host, options.hostname);
       return request;
     });
     params.write = true;
@@ -95,9 +89,9 @@ var _ = require("underscore"),
   });
 
   it("post requests includes additional headers", function() {
-    gently.expect(connection, "request", function(method, url, options) {
-      assert.ok(options["Content-Length"]);
-      assert.equal("application/x-www-form-urlencoded", options["Content-Type"]);
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
+      assert.ok(options.headers["Content-Length"]);
+      assert.equal("application/x-www-form-urlencoded", options.headers["Content-Type"]);
       return request;
     });
     params.write = true;
@@ -105,8 +99,8 @@ var _ = require("underscore"),
   });
 
   it("writes body to request", function() {
-    gently.expect(connection, "request", function() {
-      return request;
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function() {
+        return request;
     });
     gently.expect(request, "write", function(data) {
         assert.ok(data);
@@ -126,9 +120,6 @@ var _ = require("underscore"),
     connection = new fakes.Client(80, lastfm.host);
     request = new fakes.ClientRequest();
     gently = new Gently();
-    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function() {
-      return connection;
-    });
   });
 
   it("emits data as json", function() {
@@ -180,13 +171,13 @@ var _ = require("underscore"),
   }
 
   function expectRequestToEmit(expectation) {
-    gently.expect(connection, "request", function() {
-        return request;
+    var response = new fakes.ClientResponse();
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
+      cb(response);
+      return request;
     });
     var lastfmRequest = new LastFmRequest(lastfm);
     gently.expect(lastfmRequest, "emit", expectation);
-    var response = new fakes.ClientResponse();
-    request.emit("response", response);
     _(receivedData).each(function(data) {
       response.emit("data", data);
     });
