@@ -178,7 +178,6 @@ var _ = require("underscore"),
     });
     var lastfmRequest = new LastFmRequest(lastfm);
     gently.expect(lastfmRequest, "emit", expectation);
-    request.emit("response", response);
     _(receivedData).each(function(data) {
       response.emit("data", data);
     });
