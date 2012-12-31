@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2
+* Use http.request instead of deprecated http.createClient.
+* lastfm-node now requires node v0.4.10 and above.
+
 ## 0.8.1
 * Automatically set album parameter from track details when available.
 * Experimental REPL.

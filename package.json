@@ -1,17 +1,18 @@
 {
   "name": "lastfm",
   "description": "Read and write to Last.fm",
-  "version": "0.8.0",
+  "version": "0.8.2",
   "author": "James Scott <jammus@gmail.com>",
   "contributors": [
-    "Garrett Wilkin <garrett.wilkin@gmail.com> (http://geethink.com)"
+    "Garrett Wilkin <garrett.wilkin@gmail.com> (http://geethink.com)",
+    "Uwe L. Korn <uwelk@xhochy.com> (http://xhochy.com/)"
   ], 
   "repository": {
     "type": "git",
     "url": "http://github.com/jammus/lastfm-node.git"
   },
   "engine": [
-    "node >= 0.2.6"
+    "node >= 0.4.10"
   ],
   "directories": {
     "lib": "./lib/lastfm"
