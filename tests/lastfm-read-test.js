@@ -6,7 +6,7 @@ var fakes = require("./fakes");
 var LastFmRequest = fakes.LastFmRequest;
 
 (function() {
-  var gently, lastfm, client;
+  var gently, lastfm;
   var options, expectations;
   var notExpected;
 
@@ -26,20 +26,15 @@ var LastFmRequest = fakes.LastFmRequest;
       api_key: "key",
       secret: "secret"
     });
-    client = new fakes.Client();
-    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function(port, host) {
-      verifyCreateClient(port, host);
-      return client;
-    });
-    gently.expect(client, "request", function(method, url, header) {
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
+      verifyCreateClient(options.port, options.hostname);
       var request = new fakes.ClientRequest();
-      if (method == "POST") {
-        gently.expect(request, "write", function(data) {
-          verifyRequest(method, url, header, data);
-        });
-      }
-      else {
-        verifyRequest(method, url, header);
+      if (options.method == "POST") {
+          gently.expect(request, "write", function(data) {
+              verifyRequest(options.method, options.path, options.headers, data);
+          });
+      } else {
+          verifyRequest(options.method, options.path, options.headers);
       }
       return request;
     });
