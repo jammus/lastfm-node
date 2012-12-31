@@ -18,7 +18,7 @@ var _ = require("underscore"),
   it("creates a get request", function() {
     gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
       assert.equal("GET", options.method);
-      assert.equal(lastfm.host, options.hostname);
+      assert.equal(lastfm.host, options.host);
       return request;
     });
     var lastfmRequest = new LastFmRequest(lastfm, "any.method");
@@ -81,10 +81,18 @@ var _ = require("underscore"),
     gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
       assert.equal("POST", options.method);
       assert.equal(lastfm.url, options.path);
-      assert.equal(lastfm.host, options.hostname);
+      assert.equal(lastfm.host, options.host);
       return request;
     });
     params.write = true;
+    var lastFmRequest = new LastFmRequest(lastfm, "any.method", params);
+  });
+
+  it("get requests includes content-length headers", function() {
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
+      assert.ok(options.headers["Content-Length"]);
+      return request;
+    });
     var lastFmRequest = new LastFmRequest(lastfm, "any.method", params);
   });
 

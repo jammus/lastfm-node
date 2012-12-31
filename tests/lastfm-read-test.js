@@ -27,7 +27,7 @@ var LastFmRequest = fakes.LastFmRequest;
       secret: "secret"
     });
     gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
-      verifyCreateClient(options.port, options.hostname);
+      verifyCreateClient(options.port, options.host);
       var request = new fakes.ClientRequest();
       if (options.method == "POST") {
           gently.expect(request, "write", function(data) {
