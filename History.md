@@ -5,8 +5,6 @@
   to fail. (maxkueng)
 * Fix issue where all undefined and null parameters would cause signatures
   to fail.
-
-## 0.8.2
 * Use http.request instead of deprecated http.createClient. (xhochy)
 * lastfm-node now requires node v0.4.10 and above.
 
