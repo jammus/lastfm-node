@@ -88,14 +88,6 @@ var _ = require("underscore"),
     var lastFmRequest = new LastFmRequest(lastfm, "any.method", params);
   });
 
-  it("get requests includes content-length headers", function() {
-    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
-      assert.ok(options.headers["Content-Length"]);
-      return request;
-    });
-    var lastFmRequest = new LastFmRequest(lastfm, "any.method", params);
-  });
-
   it("post requests includes additional headers", function() {
     gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
       assert.ok(options.headers["Content-Length"]);

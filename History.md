@@ -1,8 +1,10 @@
 # Changelog
 
-## Next version
+## 0.8.3
 * Fix issue where undefined mbid in track object would cause scrobble
-  to fail (maxkueng)
+  to fail. (maxkueng)
+* Fix issue where all undefined and null parameters would cause signatures
+  to fail.
 
 ## 0.8.2
 * Use http.request instead of deprecated http.createClient. (xhochy)
