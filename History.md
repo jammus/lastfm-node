@@ -1,7 +1,11 @@
 # Changelog
 
+## Next version
+* Fix issue where undefined mbid in track object would cause scrobble
+  to fail (maxkueng)
+
 ## 0.8.2
-* Use http.request instead of deprecated http.createClient.
+* Use http.request instead of deprecated http.createClient. (xhochy)
 * lastfm-node now requires node v0.4.10 and above.
 
 ## 0.8.1
