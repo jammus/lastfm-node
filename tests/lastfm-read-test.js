@@ -6,7 +6,7 @@ var fakes = require("./fakes");
 var LastFmRequest = fakes.LastFmRequest;
 
 (function() {
-  var gently, lastfm, client;
+  var gently, lastfm;
   var options, expectations;
   var notExpected;
 
@@ -26,20 +26,15 @@ var LastFmRequest = fakes.LastFmRequest;
       api_key: "key",
       secret: "secret"
     });
-    client = new fakes.Client();
-    gently.expect(GENTLY_HIJACK.hijacked.http, "createClient", function(port, host) {
-      verifyCreateClient(port, host);
-      return client;
-    });
-    gently.expect(client, "request", function(method, url, header) {
+    gently.expect(GENTLY_HIJACK.hijacked.http, "request", function(options, cb) {
+      verifyCreateClient(options.port, options.host);
       var request = new fakes.ClientRequest();
-      if (method == "POST") {
-        gently.expect(request, "write", function(data) {
-          verifyRequest(method, url, header, data);
-        });
-      }
-      else {
-        verifyRequest(method, url, header);
+      if (options.method == "POST") {
+          gently.expect(request, "write", function(data) {
+              verifyRequest(options.method, options.path, options.headers, data);
+          });
+      } else {
+          verifyRequest(options.method, options.path, options.headers);
       }
       return request;
     });
@@ -317,6 +312,18 @@ var LastFmRequest = fakes.LastFmRequest;
     whenMethodIs("auth.getsession");
     andParamsAre({ track: "Tony’s Theme (Remastered)" });
     expectSignatureHashToBe("15f5159046bf1e76774b9dd46a4ed993");
+  });
+
+  it("signature hash treats undefined values as blank", function() {
+    whenMethodIs("any.method");
+    andParamsAre({ signed: true, track: 'Replicating Networks', artist: 'Rabbit Milk', albumArtist: undefined });
+    expectSignatureHashOf("albumArtistapi_keykeyartistRabbit Milkmethodany.methodtrackReplicating Networkssecret");
+  });
+
+  it("signature hash treats null values as blank", function() {
+    whenMethodIs("any.method");
+    andParamsAre({ signed: true, track: 'Replicating Networks', artist: 'Rabbit Milk', albumArtist: null });
+    expectSignatureHashOf("albumArtistapi_keykeyartistRabbit Milkmethodany.methodtrackReplicating Networkssecret");
   });
 
   it("write requests use post", function() {

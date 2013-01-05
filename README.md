@@ -338,3 +338,9 @@ When requesting track info the `track` param can be either the track name or a t
 
 Heavily drawn from technoweenie's twitter-node  
 http://github.com/technoweenie/twitter-node
+
+## Contributors
+
+* Garret Wilkin (garrettwilkin) - http://geethink.com
+* Uwe L. Korn (xhochy) - http://xhochy.com
+* Max Kueng (maxkueng) - http://maxkueng.com
