@@ -314,6 +314,18 @@ var LastFmRequest = fakes.LastFmRequest;
     expectSignatureHashToBe("15f5159046bf1e76774b9dd46a4ed993");
   });
 
+  it("signature hash treats undefined values as blank", function() {
+    whenMethodIs("any.method");
+    andParamsAre({ signed: true, track: 'Replicating Networks', artist: 'Rabbit Milk', albumArtist: undefined });
+    expectSignatureHashOf("albumArtistapi_keykeyartistRabbit Milkmethodany.methodtrackReplicating Networkssecret");
+  });
+
+  it("signature hash treats null values as blank", function() {
+    whenMethodIs("any.method");
+    andParamsAre({ signed: true, track: 'Replicating Networks', artist: 'Rabbit Milk', albumArtist: null });
+    expectSignatureHashOf("albumArtistapi_keykeyartistRabbit Milkmethodany.methodtrackReplicating Networkssecret");
+  });
+
   it("write requests use post", function() {
     whenMethodIs("any.method");
     andParamsAre({ write: true });
