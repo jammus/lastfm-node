@@ -4,13 +4,15 @@
 * Add automatic retries to session authorisation.
 * Deprecated session.authorise() in favour of supplying a token at creation.
 
+## 0.8.4
+* Added some user functions to list of signed methods (maxkueng)
+* Added some library functions to list of write methods (maxkueng)
+
 ## 0.8.3
 * Fix issue where undefined mbid in track object would cause scrobble
   to fail. (maxkueng)
 * Fix issue where all undefined and null parameters would cause signatures
   to fail.
-
-## 0.8.2
 * Use http.request instead of deprecated http.createClient. (xhochy)
 * lastfm-node now requires node v0.4.10 and above.
 
