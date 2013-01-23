@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.4
+* Added some user functions to list of signed methods (maxkueng)
+* Added some library functions to list of write methods (maxkueng)
+
 ## 0.8.3
 * Fix issue where undefined mbid in track object would cause scrobble
   to fail. (maxkueng)
