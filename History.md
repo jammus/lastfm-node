@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+* Add automatic retries to session authorisation.
+* Deprecated session.authorise() in favour of supplying a token at creation.
+
 ## 0.8.4
 * Added some user functions to list of signed methods (maxkueng)
 * Added some library functions to list of write methods (maxkueng)
