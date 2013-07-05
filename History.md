@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 0.9.0
 * Add automatic retries to session authorisation.
 * Deprecated session.authorise() in favour of supplying a token at creation.
 
