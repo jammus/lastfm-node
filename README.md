@@ -90,6 +90,10 @@ Options:
 
         Start streaming automatically. Defaults to false.
 
+- *extended*
+
+        Includes extended data in each artist, and whether or not the user has loved each track
+
 - *handlers*
 
         Default event handlers to attach to the request object on creation.
