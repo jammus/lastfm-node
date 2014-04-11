@@ -425,7 +425,7 @@ var fakes = require("./fakes");
       });
     });
 
-    it("emits succes if retry is non-retry error", function() {
+    it("emits error if retry is non-retry error", function() {
       whenRequestThrowsError(16, "Temporarily unavailable");
       onNextRequests(function(nextRequest) {
         whenNextRequestThrowsError(nextRequest, 6, "Invalid parameter");
