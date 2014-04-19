@@ -146,6 +146,34 @@ var _ = require("underscore"),
     });
   });
 
+  it("emits retry if error is temporary", function() {
+    whenReceiving("{\"error\": 11, \"message\": \"Service Offline\"}");
+    expectRequestToEmit(function(event, data) {
+      assert.equal("retrying", event);
+    });
+  });
+
+  it("emits error if retried request is unrecoverable error", function() {
+    whenReceiving("{\"error\": 11, \"message\": \"Service Offline\"}");
+    expectRequestToEmit(function(event, data) {
+      assert.equal("retrying", event);
+    });
+    whenReceiving("{\"error\": 2, \"message\": \"service does not exist\"}");
+    expectRequestToEmit(function(event, error) {
+      assert.equal("error", event);
+      assert.equal("service does not exist", error.message);
+    });
+  });
+
+  it("retrying events include error received and delay details", function() {
+    whenReceiving("{\"error\": 11, \"message\": \"Service Offline\"}");
+    expectRetry(function(retry) {
+      assert.equal(retry.delay, 10000);
+      assert.equal(retry.error, 11);
+      assert.equal(retry.message, "Service Offline");
+    });
+  });
+
   it("accepts data in chunks", function() {
     whenReceiving(["{\"testda", "ta\":\"recei", "ved\"}"]);
     expectRequestToEmit(function(event, data) {
@@ -182,5 +210,13 @@ var _ = require("underscore"),
       response.emit("data", data);
     });
     response.emit("end");
+  }
+
+  function expectRetry(callback) {
+    callback = callback || function() { };
+    expectRequestToEmit(function(event, data) {
+        assert.equal(event, "retrying");
+        callback(data);
+    });
   }
 })();
