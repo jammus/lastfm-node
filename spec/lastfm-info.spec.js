@@ -54,6 +54,21 @@ describe('LastFmInfo', function() {
     expect(params.success).toBe(undefined);
   });
 
+  describe('track info requests', function() {
+    it('can accept artist, track name and mbid', function() {
+      var info = new LastFmInfo(lastfm, 'track', {
+        'artist': 'The Mae Shi',
+        'track': 'Run To Your Grave',
+        'mbid': '1234567890',
+        'handlers': handlers
+      });
+      var params = lastfm.request.mostRecentCall.args[1];
+      expect(params.artist, 'The Mae Shi');
+      expect(params.track, 'Run To Your Grave');
+      expect(params.mbid, '1234567890');
+    });
+  });
+
   describe('when receiving data', function() {
     it('emits error when receiving unexpected data', function() {
       var info = new LastFmInfo(lastfm, 'track', { 'handlers': handlers });
