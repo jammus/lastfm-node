@@ -7,7 +7,7 @@
     "Garrett Wilkin <garrett.wilkin@gmail.com> (http://geethink.com)",
     "Uwe L. Korn <uwelk@xhochy.com> (http://xhochy.com/)",
     "Max Kueng (http://maxkueng.com/)"
-  ], 
+  ],
   "repository": {
     "type": "git",
     "url": "http://github.com/jammus/lastfm-node.git"
@@ -18,11 +18,11 @@
   "directories": {
     "lib": "./lib/lastfm"
   },
-  "dependencies" : {
-    "underscore": ""
+  "dependencies": {
+    "underscore": "~1.6.0"
   },
   "devDependencies": {
-    "gently" : ""
+    "gently": ""
   },
   "main": "./lib/lastfm/index",
   "engines": {
