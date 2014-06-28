@@ -16,7 +16,7 @@
     "node >= 0.4.10"
   ],
   "directories": {
-    "lib": "./lib/lastfm"
+    "test": "tests"
   },
   "dependencies": {
     "underscore": "~1.6.0"
@@ -25,7 +25,9 @@
     "gently": ""
   },
   "main": "./lib/lastfm/index",
-  "engines": {
-    "node": "*"
-  }
+  "bugs": {
+    "url": "https://github.com/jammus/lastfm-node/issues"
+  },
+  "homepage": "https://github.com/jammus/lastfm-node",
+  "license": "MIT"
 }
