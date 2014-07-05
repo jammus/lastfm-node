@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.9.1
+* Updated package information for Debian packaging (andrewrk)
+
 ## 0.9.0
 * Add automatic retries to session authorisation.
 * Deprecated session.authorise() in favour of supplying a token at creation.
