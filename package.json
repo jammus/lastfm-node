@@ -19,10 +19,11 @@
     "lib": "./lib/lastfm"
   },
   "dependencies" : {
-    "underscore": ""
+    "underscore": "1.4.*"
   },
   "devDependencies": {
-    "gently" : ""
+    "gently" : "",
+    "nock": "0.28.*"
   },
   "main": "./lib/lastfm/index",
   "engines": {
