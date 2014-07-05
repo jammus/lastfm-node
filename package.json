@@ -1,12 +1,13 @@
 {
   "name": "lastfm",
   "description": "Read and write to Last.fm",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "author": "James Scott <jammus@gmail.com>",
   "contributors": [
     "Garrett Wilkin <garrett.wilkin@gmail.com> (http://geethink.com)",
     "Uwe L. Korn <uwelk@xhochy.com> (http://xhochy.com/)",
-    "Max Kueng (http://maxkueng.com/)"
+    "Max Kueng (http://maxkueng.com/)",
+    "Andrew Kelley <superjoe30@gmail.com> (http://andrewkelley.me/)"
   ],
   "repository": {
     "type": "git",
