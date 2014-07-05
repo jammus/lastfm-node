@@ -33,10 +33,7 @@ var _quietHandlers = {
     stoppedPlaying: quietHandler
 }
 
-var lastfm = new LastFmNode({
-    api_key: config.api_key,
-    secret: config.secret
-});
+var lastfm = new LastFmNode(config);
 
 var context = repl.start().context;
 context.lastfm = lastfm;

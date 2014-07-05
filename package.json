@@ -1,13 +1,14 @@
 {
   "name": "lastfm",
   "description": "Read and write to Last.fm",
-  "version": "0.8.4",
+  "version": "0.9.1",
   "author": "James Scott <jammus@gmail.com>",
   "contributors": [
     "Garrett Wilkin <garrett.wilkin@gmail.com> (http://geethink.com)",
     "Uwe L. Korn <uwelk@xhochy.com> (http://xhochy.com/)",
-    "Max Kueng (http://maxkueng.com/)"
-  ], 
+    "Max Kueng (http://maxkueng.com/)",
+    "Andrew Kelley <superjoe30@gmail.com> (http://andrewkelley.me/)"
+  ],
   "repository": {
     "type": "git",
     "url": "http://github.com/jammus/lastfm-node.git"
@@ -16,16 +17,18 @@
     "node >= 0.4.10"
   ],
   "directories": {
-    "lib": "./lib/lastfm"
+    "test": "tests"
   },
-  "dependencies" : {
-    "underscore": ""
+  "dependencies": {
+    "underscore": "~1.6.0"
   },
   "devDependencies": {
-    "gently" : ""
+    "gently": ""
   },
   "main": "./lib/lastfm/index",
-  "engines": {
-    "node": "*"
-  }
+  "bugs": {
+    "url": "https://github.com/jammus/lastfm-node/issues"
+  },
+  "homepage": "https://github.com/jammus/lastfm-node",
+  "license": "MIT"
 }

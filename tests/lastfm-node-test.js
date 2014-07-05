@@ -24,7 +24,8 @@ var querystring = require("querystring");
   before(function() {
     lastfm = new LastFmNode({
       api_key: "abcdef12345",
-      secret: "ghijk67890"
+      secret: "ghijk67890",
+      host: "test.audioscrobbler.com"
     });
   })
 
@@ -34,5 +35,9 @@ var querystring = require("querystring");
 
   it("configures secret", function() {
     assert.equal("ghijk67890", lastfm.secret);
+  });
+
+  it("configures host", function() {
+    assert.equal("test.audioscrobbler.com", lastfm.host);
   });
 })();
