@@ -3,6 +3,7 @@
 ## Next version
 * Fix incorrect port during https requests (omnichronous)
 * Make port configurable
+* Enable extended info in track stream (robbiet480)
 
 ## 0.9.1
 * Updated package information for Debian packaging (andrewrk)
