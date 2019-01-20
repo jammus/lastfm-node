@@ -1,5 +1,8 @@
 # Changelog
 
+## Next version
+* Fix incorrect port during https requests (omnichronous)
+
 ## 0.9.1
 * Updated package information for Debian packaging (andrewrk)
 
