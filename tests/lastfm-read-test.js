@@ -146,9 +146,9 @@ var LastFmRequest = fakes.LastFmRequest;
     });
   }
 
-  it("default to port 80", function() {
+  it("default port to undefined", function() {
     whenMethodIs("any.method");
-    expectRequestOnPort(80);
+    expectRequestOnPort(undefined);
   });
 
   it("makes request to audioscrobbler", function() {
