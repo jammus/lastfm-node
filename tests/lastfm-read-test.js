@@ -379,4 +379,16 @@ var LastFmRequest = fakes.LastFmRequest;
       expectSignature();
     });
   });
+
+  it("uses configured port and host when supplied", function() {
+    lastfm = new LastFmNode({
+      api_key: "key",
+      secret: "secret",
+      host: "audioscrobbler.localhost",
+      port: 8080
+    });
+    whenMethodIs("any.method");
+    expectRequestToHost("audioscrobbler.localhost");
+    expectRequestOnPort(8080);
+  });
 })();
