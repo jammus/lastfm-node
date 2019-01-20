@@ -14,6 +14,10 @@ var querystring = require("querystring");
   it("has default host", function() {
     assert.equal("ws.audioscrobbler.com", lastfm.host);
   });
+
+  it("has no port configure by default", function() {
+    assert.equal(undefined, lastfm.port);
+  });
 })();
 
 (function() {
@@ -25,7 +29,8 @@ var querystring = require("querystring");
     lastfm = new LastFmNode({
       api_key: "abcdef12345",
       secret: "ghijk67890",
-      host: "test.audioscrobbler.com"
+      host: "test.audioscrobbler.com",
+      port: 8080
     });
   })
 
@@ -39,5 +44,9 @@ var querystring = require("querystring");
 
   it("configures host", function() {
     assert.equal("test.audioscrobbler.com", lastfm.host);
+  });
+
+  it("configures port", function() {
+    assert.equal(8080, lastfm.port);
   });
 })();

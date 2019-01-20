@@ -2,6 +2,7 @@
 
 ## Next version
 * Fix incorrect port during https requests (omnichronous)
+* Make port configurable
 
 ## 0.9.1
 * Updated package information for Debian packaging (andrewrk)
