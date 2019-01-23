@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 0.9.3
 * Fix incorrect port during https requests (omnichronous)
 * Make port configurable
 * Enable extended info in track stream (robbiet480)
