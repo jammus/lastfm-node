@@ -1,7 +1,7 @@
 {
   "name": "lastfm",
   "description": "Read and write to Last.fm",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "author": "James Scott <jammus@gmail.com>",
   "contributors": [
     "Garrett Wilkin <garrett.wilkin@gmail.com> (http://geethink.com)",
@@ -23,7 +23,7 @@
     "underscore": "~1.6.0"
   },
   "devDependencies": {
-    "gently": ""
+    "gently": "^0.10.0"
   },
   "main": "./lib/lastfm/index",
   "bugs": {

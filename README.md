@@ -16,6 +16,16 @@ Read and write to users recent plays on Last.fm.
       useragent: 'appname/vX.X MyApp' // optional. defaults to lastfm-node.
     });
 
+## Tests
+
+Tests currently use a very old testing framework found at https://github.com/mynyml/ntest. You can get them running by cloning that repository and doing
+
+    $ ln -s /path/to/ntest/lib node_modules/ntest
+
+Then run the tests
+
+    $ node tests/
+
 ## Documentation
 
 ### LastFmRequest
@@ -89,6 +99,10 @@ Options:
 - *autostart*
 
         Start streaming automatically. Defaults to false.
+
+- *extended*
+
+        Includes extended data in each artist, and whether or not the user has loved each track
 
 - *handlers*
 

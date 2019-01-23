@@ -171,6 +171,35 @@ var _ = require("underscore")
     });
   });
 
+  it("emits nothing when tracks empty", function() {
+    whenRequestEmits({
+      recenttracks: { track: [] }
+    });
+    expectStreamToEmit(0, function() {
+      assert.fail('Should not emit any tracks');
+    });
+  });
+
+  it("emits now playing if array contains single track flagged now playing", function() {
+    whenRequestEmits({
+      recenttracks: { track: [FakeTracks.RunToYourGrave_NP] }
+    });
+    expectStreamToEmit(function(event, track) {
+      assert.equal("nowPlaying", event);
+      assert.equal("Run To Your Grave", track.name);
+    });
+  });
+
+  it("emits last played when single track received if array", function() {
+    whenRequestEmits({ recenttracks: { track:
+      [FakeTracks.LambAndTheLion]
+    } });
+    expectStreamToEmit(function(event, track) {
+      assert.equal("lastPlayed", event);
+      assert.equal("Lamb and the Lion", track.name);
+    });
+  });
+
   it("emits stoppedPlaying track when now playing stops", function() {
     ifRequestHasPreviouslyEmit([
       { recenttracks: { track: FakeTracks.RunToYourGrave } },

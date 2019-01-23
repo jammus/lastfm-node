@@ -59,7 +59,7 @@ describe("a new info instance")
     new LastFmInfo(lastfm, "user", { user: "username", arbitrary: "anything" });
   });
 
-  it("doesnt pass through callback parameters", function() {
+  it("doesn't pass through callback parameters", function() {
     gently.expect(lastfm, "request", function(method, params) {
       assert.ok(!params.error);
       assert.ok(!params.success);

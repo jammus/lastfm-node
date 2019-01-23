@@ -146,9 +146,9 @@ var LastFmRequest = fakes.LastFmRequest;
     });
   }
 
-  it("default to port 80", function() {
+  it("default port to undefined", function() {
     whenMethodIs("any.method");
-    expectRequestOnPort(80);
+    expectRequestOnPort(undefined);
   });
 
   it("makes request to audioscrobbler", function() {
@@ -378,5 +378,17 @@ var LastFmRequest = fakes.LastFmRequest;
       whenMethodIs(method);
       expectSignature();
     });
+  });
+
+  it("uses configured port and host when supplied", function() {
+    lastfm = new LastFmNode({
+      api_key: "key",
+      secret: "secret",
+      host: "audioscrobbler.localhost",
+      port: 8080
+    });
+    whenMethodIs("any.method");
+    expectRequestToHost("audioscrobbler.localhost");
+    expectRequestOnPort(8080);
   });
 })();
