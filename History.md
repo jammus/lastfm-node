@@ -4,6 +4,7 @@
 * Fix incorrect port during https requests (omnichronous)
 * Make port configurable
 * Enable extended info in track stream (robbiet480)
+* Cope with missing tracks in getRecentTracks response (dancoates, theNailz)
 
 ## 0.9.1
 * Updated package information for Debian packaging (andrewrk)
