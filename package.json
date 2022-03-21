@@ -20,7 +20,7 @@
     "test": "tests"
   },
   "dependencies": {
-    "underscore": "~1.6.0"
+    "underscore": "^1.13.2"
   },
   "devDependencies": {
     "gently": "^0.10.0"
