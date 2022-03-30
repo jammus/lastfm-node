@@ -1,14 +1,14 @@
-# lastfm-node
+# @wheredidhugo/lastfm
 
-Read and write to users recent plays on Last.fm.
+Fork of @jammus/lastfm with security updates
 
 ## Installation
 
-    npm install lastfm
+    npm install @wheredidhugo/lastfm
 
 ## Usage
 
-    var LastFmNode = require('lastfm').LastFmNode;
+    var LastFmNode = require('@wheredidhugo/lastfm').LastFmNode;
   
     var lastfm = new LastFmNode({
       api_key: 'apikey',    // sign-up for a key at http://www.last.fm/api
@@ -295,7 +295,7 @@ When requesting track info the `track` param can be either the track name or a t
 
 ## Example
 
-    var LastFmNode = require('lastfm').LastFmNode;
+    var LastFmNode = require('@wheredidhugo/lastfm').LastFmNode;
     
     var lastfm = new LastFmNode({
       api_key: 'abc',

@@ -1,4 +1,4 @@
-var LastFmNode = require('./lib/lastfm').LastFmNode,
+var LastFmNode = require('../lib/lastfm').LastFmNode,
     repl = require('repl'),
     config = require('./config'),
     _ = require('underscore');

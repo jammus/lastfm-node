@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.9.4
+* Updated dependencies
+
 ## 0.9.3
 * Fix incorrect port during https requests (omnichronous)
 * Make port configurable
