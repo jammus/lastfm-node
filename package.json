@@ -1,7 +1,7 @@
 {
   "name": "lastfm",
   "description": "Read and write to Last.fm",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "author": "James Scott <jammus@gmail.com>",
   "contributors": [
     "Garrett Wilkin <garrett.wilkin@gmail.com> (http://geethink.com)",
