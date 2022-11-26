@@ -9,6 +9,9 @@
     "Max Kueng (http://maxkueng.com/)",
     "Andrew Kelley <superjoe30@gmail.com> (http://andrewkelley.me/)"
   ],
+  "scripts": {
+    "test": "node tests/"
+  },
   "repository": {
     "type": "git",
     "url": "http://github.com/jammus/lastfm-node.git"
