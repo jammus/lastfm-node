@@ -3,8 +3,9 @@ var LastFmSession = require('../lib/lastfm/lastfm-session');
 var LastFmUpdate = require('../lib/lastfm/lastfm-update');
 var fakes = require("./fakes");
 
-(function() {
-  describe("new LastFmUpdate")
+const assert = require("assert");
+
+describe("new LastFmUpdate", () => {
     it("can have success and error handlers specified in option at creation", function() {
       var gently = new Gently();
       var lastfm = new LastFmNode();
@@ -15,10 +16,15 @@ var fakes = require("./fakes");
       update.emit("error");
       update.emit("success");
     });
-})();
+});
 
-(function() {
+
+describe("update requests", () => {
   var request, returndata, options, session, method, gently, lastfm, authorisedSession, errorCode, errorMessage, update;
+
+  beforeEach(function() {
+    setupFixture();
+  });
 
   function setupFixture() {
     request = new fakes.LastFmRequest();
@@ -130,29 +136,20 @@ var fakes = require("./fakes");
       request.emit("success", returndata);
     }
   }
-
-  describe("update requests")
-    before(function() {
-      setupFixture();
-    });
   
-    it("fail when the session is not authorised", function() {
-      var session = new LastFmSession()
-        , update = new LastFmUpdate(lastfm, "method", session, {
-            handlers: {
-              error: gently.expect(function(error) {
-                assert.equal(error.error, 4);
-                assert.equal(error.message, "Authentication failed");
-              })
-            }
-          });
-    });
+  it("fail when the session is not authorised", function() {
+    var session = new LastFmSession()
+      , update = new LastFmUpdate(lastfm, "method", session, {
+          handlers: {
+            error: gently.expect(function(error) {
+              assert.equal(error.error, 4);
+              assert.equal(error.message, "Authentication failed");
+            })
+          }
+        });
+  });
   
-  describe("nowPlaying updates")
-    before(function() {
-      setupFixture();
-    });
-  
+  describe("nowPlaying updates", () => {
     it("uses updateNowPlaying method", function() {
       gently.expect(lastfm, "request", function(method, params) {
         assert.equal("track.updateNowPlaying", method);
@@ -221,12 +218,9 @@ var fakes = require("./fakes");
       });
       expectError(100, errorMessage);
     });
+  });
   
-  describe("a scrobble request")
-    before(function() {
-      setupFixture();
-    });
-  
+  describe("a scrobble request", () => {
     it("emits error when no timestamp supplied", function() {
       new LastFmUpdate(lastfm, "scrobble", authorisedSession, {
         track: FakeTracks.RunToYourGrave,
@@ -332,10 +326,11 @@ var fakes = require("./fakes");
         error: function() { }
       });
     });
+  });
 
-  var tmpFn;
-  describe("update retries")
-    before(function() {
+  describe("update retries", () => {
+    var tmpFn;
+    beforeEach(function() {
       tmpFn = LastFmUpdate.prototype.scheduleCallback;
       LastFmUpdate.prototype.scheduleCallback = function(callback, delay) { };
       setupFixture();
@@ -347,7 +342,7 @@ var fakes = require("./fakes");
       });
     });
   
-    after(function() {
+    afterEach(function() {
       LastFmUpdate.prototype.scheduleCallback = tmpFn;
     });
 
@@ -482,4 +477,5 @@ var fakes = require("./fakes");
         });
       }, retrySchedule.length);
     });
-})();
+  });
+});

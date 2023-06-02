@@ -1,13 +1,13 @@
 require("./common.js");
 
+const assert = require("assert");
+
 var querystring = require("querystring");
 
-(function() {
+describe("default LastFmNode instance", () => {
   var lastfm;
-
-  describe("default LastFmNode instance")
     
-  before(function() {
+  beforeEach(function() {
     lastfm = new LastFmNode();
   })
 
@@ -18,12 +18,10 @@ var querystring = require("querystring");
   it("has no port configure by default", function() {
     assert.equal(undefined, lastfm.port);
   });
-})();
+});
 
-(function() {
+describe("LastFmNode options", () => {
   var lastfm;
-
-  describe("LastFmNode options")
 
   before(function() {
     lastfm = new LastFmNode({
@@ -49,4 +47,4 @@ var querystring = require("querystring");
   it("configures port", function() {
     assert.equal(8080, lastfm.port);
   });
-})();
+});

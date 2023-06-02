@@ -1,9 +1,8 @@
 require('./common');
 var LastFmBase = require("../lib/lastfm/lastfm-base");
+const assert = require('assert');
 
-(function() {
-  describe("LastFmBase");
-
+describe("LastFmBase", () => {
   it("is an event emitter", function() {
     var events = { expected: function(){} };
     var gently = new Gently();
@@ -14,11 +13,9 @@ var LastFmBase = require("../lib/lastfm/lastfm-base");
     });
     lastfmBase.emit("test");
   });
-})();
+});
 
-(function() {
-  describe("LastFmBase.registerHandlers");
-
+describe("LastFmBase.registerHandlers", () => {
   it("attaches events specified in handelers parameter", function() {
     var handlers = {
       error: function() { },
@@ -35,14 +32,12 @@ var LastFmBase = require("../lib/lastfm/lastfm-base");
     lastfmBase.emit("success");
     lastfmBase.emit("anything");
   });
-})();
+});
 
-(function() {
+describe("LastFmBase.filterParameters", () => {
   var lastfmBase, original;
 
-  describe("LastFmBase.filterParameters");
-
-  before(function() {
+  beforeEach(function() {
     lastfmBase = new LastFmBase();
     original = { one: 1, two: 2, three: 3 };
   });
@@ -75,4 +70,4 @@ var LastFmBase = require("../lib/lastfm/lastfm-base");
     assert.equal(typeof copy.success, "undefined");
     assert.equal(typeof copy.handlers, "undefined");
   });
-})();
+});

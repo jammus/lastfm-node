@@ -16,14 +16,18 @@
   "engine": [
     "node >= 0.4.10"
   ],
+  "scripts": {
+    "test": "mocha"
+  },
   "directories": {
-    "test": "tests"
+    "test": "test"
   },
   "dependencies": {
     "underscore": "~1.6.0"
   },
   "devDependencies": {
-    "gently": "^0.10.0"
+    "gently": "^0.10.0",
+    "mocha": "^10.2.0"
   },
   "main": "./lib/lastfm/index",
   "bugs": {

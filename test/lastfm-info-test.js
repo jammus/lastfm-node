@@ -2,11 +2,11 @@ require("./common.js");
 var LastFmInfo = require("../lib/lastfm/lastfm-info");
 var LastFmRequest = require("../lib/lastfm/lastfm-request");
 var fakes = require("./fakes");
+const assert = require("assert");
 
-(function() {
-describe("a new info instance")
+describe("a new info instance", () => {
   var lastfm, gently;
-  before(function() {
+  beforeEach(function() {
     lastfm = new LastFmNode();
     gently = new Gently();
   });
@@ -68,12 +68,11 @@ describe("a new info instance")
     });
     new LastFmInfo(lastfm, "user", { handlers:  { error: function() {}, success: function() {} } });
   });
-})();
+});
 
-(function() {
-describe("when receiving data")
+describe("when receiving data", () => {
   var gently, lastfm, request;
-  before(function() {
+  beforeEach(function() {
     gently = new Gently();
     lastfm = new LastFmNode();
     request = new fakes.LastFmRequest();
@@ -115,4 +114,4 @@ describe("when receiving data")
     });
     request.emit("error", new Error("Bubbled error"));
   });
-})();
+});

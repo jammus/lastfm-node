@@ -3,12 +3,12 @@ var _ = require("underscore"),
     LastFmRequest = require("../lib/lastfm/lastfm-request"),
     fakes = require("./fakes");
 
-(function() {
-  describe("a LastFm request")
+const assert = require("assert");
 
+describe("a LastFm request", () => {
   var lastfm, connection, url, gently, request;
 
-  before(function() {
+  beforeEach(function() {
     lastfm = new LastFmNode();
     connection = new fakes.Client(80, lastfm.host);
     request = new fakes.ClientRequest();
@@ -62,14 +62,12 @@ var _ = require("underscore"),
     });
     request.emit("error", new Error(message));
   });
-})();
+});
 
-(function() {
-  describe("a LastFm request with a body")
-
+describe("a LastFm request with a body", () => {
   var lastfm, connection, url, gently, request, params;
 
-  before(function() {
+  beforeEach(function() {
     lastfm = new LastFmNode();
     connection = new fakes.Client(80, lastfm.host);
     request = new fakes.ClientRequest();
@@ -108,14 +106,12 @@ var _ = require("underscore"),
     params.write = true;
     var lastFmRequest = new LastFmRequest(lastfm, "any.method", params);
   });
-})();
+});
 
-(function() {
+describe("A Lastfm request which returns data", () => {
   var lastfm, connection, url, gently, request, receivedData;
 
-  describe("A Lastfm request which returns data")
-
-  before(function() {
+  beforeEach(function() {
     lastfm = new LastFmNode();
     connection = new fakes.Client(80, lastfm.host);
     request = new fakes.ClientRequest();
@@ -183,4 +179,4 @@ var _ = require("underscore"),
     });
     response.emit("end");
   }
-})();
+});

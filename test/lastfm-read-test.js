@@ -1,18 +1,18 @@
 require('./common');
+
 var crypto = require("crypto");
 var _ = require("underscore");
 var querystring = require("querystring");
 var fakes = require("./fakes");
 var LastFmRequest = fakes.LastFmRequest;
+const assert = require("assert");
 
-(function() {
+describe("a lastfm request", () => {
   var gently, lastfm;
   var options, expectations;
   var notExpected;
 
-  describe("a lastfm request");
-
-  before(function() {
+  beforeEach(function() {
     gently = new Gently();
     options = {};
     expectations = {
@@ -40,7 +40,7 @@ var LastFmRequest = fakes.LastFmRequest;
     });
   });
 
-  after(function() {
+  afterEach(function() {
     var request = doRequest();
     verifyHandlers(request);
   });
@@ -111,9 +111,9 @@ var LastFmRequest = fakes.LastFmRequest;
     expectSignatureHashToBe(expectedHash);
   };
 
-    this.expectSignatureHashToBe = function(hash) {
-      expectations.signatureHash = hash;
-    }
+  const expectSignatureHashToBe = function(hash) {
+    expectations.signatureHash = hash;
+  }
 
   function expectRequestOnPort(port) {
     expectations.port = port;
@@ -391,4 +391,4 @@ var LastFmRequest = fakes.LastFmRequest;
     expectRequestToHost("audioscrobbler.localhost");
     expectRequestOnPort(8080);
   });
-})();
+});

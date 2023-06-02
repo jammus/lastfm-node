@@ -4,13 +4,12 @@ var _ = require("underscore")
   , RecentTracksStream = require("../lib/lastfm/recenttracks-stream")
   , LastFmRequest = require("../lib/lastfm/lastfm-request")
   , fakes = require("./fakes");
+const assert = require("assert");
 
-(function() {
+describe("a new stream instance", () => {
   var gently, lastfm, trackStream;
 
-  describe("a new stream instance");
-
-  before(function() {
+  beforeEach(function() {
     gently = new Gently();
     lastfm = new LastFmNode();
     trackStream = new RecentTracksStream(lastfm, "username");
@@ -49,9 +48,9 @@ var _ = require("underscore")
     trackStream.emit("stoppedPlaying");
     trackStream.emit("scrobbled");
   });
-})();
+});
 
-(function() {
+describe("An active stream", () => {
   var requestEmits = [],
       previousEmits = [];
 
@@ -98,9 +97,7 @@ var _ = require("underscore")
     }
   }
 
-  describe("An active stream");
-
-  before(function() {
+  beforeEach(function() {
     previousEmits = [];
     requestEmits = [];
   });
@@ -250,14 +247,12 @@ var _ = require("underscore")
       assert.equal("Unexpected response", error.message);
     });
   });
-})();
+});
 
-(function() {
+describe("Streaming", () => {
   var lastfm, gently, request;
 
-  describe("Streaming")
-
-  before(function() { 
+  beforeEach(function() { 
     lastfm = new LastFmNode();
     gently = new Gently();
     request = new fakes.LastFmRequest();
@@ -313,21 +308,19 @@ var _ = require("underscore")
     request.emit("error", new Error(errorMessage));
     trackStream.stop();
   });
-})();
+});
 
-(function() {
+describe("Streaming", () => {
   var lastfm, gently;
 
-  describe("Streaming")
-
   var tmpScheduleFn;
-  before(function() { 
+  beforeEach(function() { 
     tmpScheduleFn = RecentTracksStream.prototype.scheduleCallback;
     lastfm = new LastFmNode();
     gently = new Gently();
   });
 
-  after(function() {
+  afterEach(function() {
     RecentTracksStream.prototype.scheduleCallback = tmpScheduleFn;
   });
 
@@ -350,4 +343,4 @@ var _ = require("underscore")
     });
     trackStream.start();
   });
-})();
+});
